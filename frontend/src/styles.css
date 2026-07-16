@@ -1,0 +1,135 @@
+/* ============================================================
+   styles.css — IBM Bob Corporate Data Copilot
+   Design System Global Tokens
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:       #f0f2f5;
+  --surface:  #f7f8fa;
+  --white:    #ffffff;
+  --border:   #e5e7eb;
+  --text:     #1f2328;
+  --muted:    #57606a;
+  --accent:   #3b82d4;
+  --purple:   #7c5cd8;
+  --green:    #24a148;
+  --orange:   #d97706;
+  --red:      #dc2626;
+  --dark:     #161616;
+  --dark-2:   #393939;
+
+  --radius-sm: 4px;
+  --radius:    6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  --font: -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Code", "Consolas", "Menlo", monospace;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── scrollbar ── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── utility buttons ── */
+.btn {
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font);
+  border: 1px solid transparent;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.btn:hover   { opacity: 0.85; }
+.btn:active  { opacity: 0.70; }
+
+.btn-primary   { background: var(--accent);  color: #fff; }
+.btn-secondary { background: var(--white);   border-color: var(--border); color: var(--text); }
+.btn-danger    { background: var(--white);   border-color: #f87171;       color: var(--red);  }
+.btn-ghost     { background: transparent;    border-color: var(--border);  color: var(--muted); }
+
+/* ── card ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.card-body { padding: 10px 12px; }
+
+/* ── tag ── */
+.tag {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.tag-dark   { background: var(--dark);   color: #fff; }
+.tag-green  { background: var(--green);  color: #fff; }
+.tag-orange { background: var(--orange); color: #fff; }
+.tag-purple { background: var(--purple); color: #fff; }
+.tag-blue   { background: #eff4ff; color: var(--accent); border: 1px solid #bfdbfe; }
+.tag-violet { background: #f5f0ff; color: var(--purple); border: 1px solid #ddd6fe; }
+
+/* ── panel section title ── */
+.panel-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  margin-top: 14px;
+}
+.panel-section-title:first-child { margin-top: 0; }
