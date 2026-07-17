@@ -1,6 +1,5 @@
 // ============================================================
-// right-panel.component.ts
-// Tabs: Catálogo | Histórico | Auditoria
+// right-panel.component.ts — Neon Dark v4
 // ============================================================
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -18,27 +17,53 @@ type PanelTab = 'catalog' | 'history' | 'audit';
   imports: [CommonModule],
   template: `
     <aside class="panel">
-      <!-- ── Tab bar ── -->
-      <div class="tab-row">
-        <!-- Tab Catálogo: GET /api/catalog/resolve?intent= + GET /api/catalog/tables/:id -->
-        <button class="tab" [class.active]="activeTab === 'catalog'" (click)="activeTab = 'catalog'">Catálogo</button>
-        <!-- Tab Histórico: GET /api/queries/history?userId=&limit=50 -->
-        <button class="tab" [class.active]="activeTab === 'history'" (click)="setTab('history')">Histórico</button>
-        <!-- Tab Auditoria: GET /api/audit/session/:sessionId -->
-        <button class="tab" [class.active]="activeTab === 'audit'"   (click)="setTab('audit')">Auditoria</button>
+
+      <!-- ── Panel header ── -->
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-icon">
+            <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12">
+              <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 4v4.25l3 1.75-.5.87-3.5-2.03V5h1z"/>
+            </svg>
+          </div>
+          Contexto
+        </div>
+        <div class="panel-header-right">
+          <div class="panel-status-dot"></div>
+          <span class="panel-status-label">live</span>
+        </div>
       </div>
 
-      <!-- ═══════════════════════════════════════════════
-           CATÁLOGO
-           GET /api/catalog/resolve?intent=
-           GET /api/catalog/tables/:tableId
-      ═══════════════════════════════════════════════ -->
+      <!-- ── Tabs ── -->
+      <div class="tab-row">
+        <button class="tab" [class.active]="activeTab === 'catalog'" (click)="activeTab = 'catalog'">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10"><path d="M1 3h14v2H1zm0 4h14v2H1zm0 4h14v2H1z"/></svg>
+          Catálogo
+        </button>
+        <button class="tab" [class.active]="activeTab === 'history'" (click)="setTab('history')">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 4v4.25l3 1.75-.5.87-3.5-2.03V5h1z"/></svg>
+          Histórico
+        </button>
+        <button class="tab" [class.active]="activeTab === 'audit'" (click)="setTab('audit')">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10"><path d="M2 1h9l3 3v11H2V1zm5 5H4v1h3zm6 0H8v1h5zm-6 3H4v1h3zm6 0H8v1h5z"/></svg>
+          Auditoria
+        </button>
+        <div class="tab-slider" [style.left]="tabSliderLeft"></div>
+      </div>
+
+      <!-- ══ CATÁLOGO ══ -->
       <div class="tab-content" *ngIf="activeTab === 'catalog'">
-        <div class="panel-section-title">Tabelas identificadas</div>
+        <div class="section-header">
+          <span class="section-label">Tabelas identificadas</span>
+          <span class="section-count">{{ tables.length }}</span>
+        </div>
 
         <div class="cat-table" *ngFor="let t of tables">
           <div class="ct-header">
-            <span class="ct-name" [title]="t.fullName">{{ t.fullName }}</span>
+            <div class="ct-header-left">
+              <div class="ct-engine-dot"></div>
+              <span class="ct-name" [title]="t.fullName">{{ t.fullName }}</span>
+            </div>
             <span class="ct-engine">{{ t.engine }}</span>
           </div>
           <div class="ct-row" *ngFor="let col of t.columns">
@@ -46,156 +71,507 @@ type PanelTab = 'catalog' | 'history' | 'audit';
             <span class="ct-type">{{ col.type }}</span>
           </div>
           <div class="ct-more" *ngIf="t.totalColumns > t.columns.length">
-            + {{ t.totalColumns - t.columns.length }} colunas…
+            <svg viewBox="0 0 16 16" fill="currentColor" width="9" height="9"><path d="M8 1v14M1 8h14"/></svg>
+            {{ t.totalColumns - t.columns.length }} mais colunas
           </div>
         </div>
 
-        <div class="panel-section-title">Pergunta similar salva</div>
-        <!-- GET /api/questions/saved?similar=true&intent=sales_drop -->
+        <div class="section-header" style="margin-top:14px;">
+          <span class="section-label">Pergunta similar</span>
+        </div>
         <div class="saved-q" *ngFor="let q of savedQuestions">
           <div class="sq-title">{{ q.question }}</div>
-          <div class="sq-desc">SQL validado · contexto: análise de queda/crescimento por SKU</div>
+          <div class="sq-meta">SQL validado · análise de queda/crescimento por SKU</div>
           <div class="sq-tags">
-            <span class="tag tag-green" *ngIf="q.validated">✓ SQL validado</span>
-            <span class="tag tag-blue" *ngFor="let tag of q.tags">{{ tag }}</span>
+            <span class="stag green" *ngIf="q.validated">✓ Validado</span>
+            <span class="stag blue" *ngFor="let tag of q.tags">{{ tag }}</span>
           </div>
         </div>
       </div>
 
-      <!-- ═══════════════════════════════════════════════
-           HISTÓRICO
-           GET /api/queries/history?userId=&limit=50
-      ═══════════════════════════════════════════════ -->
+      <!-- ══ HISTÓRICO ══ -->
       <div class="tab-content" *ngIf="activeTab === 'history'">
-        <div class="panel-section-title">Últimas consultas</div>
-        <div class="history-item" *ngFor="let h of history">
-          <div class="hi-q">{{ h.question }}</div>
-          <div class="hi-meta">
-            <span class="hi-db">{{ h.engine }}</span>
-            <span>{{ h.rowCount }} linhas</span>
-            <span>{{ h.durationMs }}ms</span>
-            <span>{{ h.timestamp }}</span>
-          </div>
+        <div class="section-header">
+          <span class="section-label">Últimas consultas</span>
+          <span class="section-count">{{ history.length }}</span>
         </div>
-        <div class="empty-state" *ngIf="history.length === 0">Nenhum histórico ainda.</div>
+        <div class="history-item" *ngFor="let h of history; let i = index">
+          <div class="hi-number">{{ i + 1 }}</div>
+          <div class="hi-body">
+            <div class="hi-q">{{ h.question }}</div>
+            <div class="hi-meta">
+              <span class="hi-db">{{ h.engine }}</span>
+              <span class="hi-stat">{{ h.rowCount }} linhas</span>
+              <span class="hi-stat">{{ h.durationMs }}ms</span>
+            </div>
+          </div>
+          <div class="hi-time">{{ h.timestamp }}</div>
+        </div>
+        <div class="empty-state" *ngIf="history.length === 0">
+          <div class="empty-icon">⏱</div>
+          <div>Nenhum histórico ainda.</div>
+        </div>
       </div>
 
-      <!-- ═══════════════════════════════════════════════
-           AUDITORIA
-           GET /api/audit/session/:sessionId
-      ═══════════════════════════════════════════════ -->
+      <!-- ══ AUDITORIA ══ -->
       <div class="tab-content" *ngIf="activeTab === 'audit'">
-        <div class="panel-section-title">Log da sessão</div>
-        <div class="audit-entry" *ngFor="let a of auditLog">
-          <span class="ae-time">{{ a.time }}</span>
-          <span class="ae-action">{{ a.action }}</span>
-          <span class="ae-tag" *ngIf="a.tag">{{ a.tag }}</span>
+        <div class="section-header">
+          <span class="section-label">Log da sessão</span>
+          <span class="section-count audit-live">● LIVE</span>
         </div>
-        <div class="empty-state" *ngIf="auditLog.length === 0">Sem entradas de auditoria.</div>
+        <div class="audit-entry" *ngFor="let a of auditLog">
+          <div class="ae-timeline">
+            <div class="ae-dot"></div>
+            <div class="ae-line"></div>
+          </div>
+          <div class="ae-body">
+            <div class="ae-time">{{ a.time }}</div>
+            <div class="ae-action">{{ a.action }}</div>
+            <span class="ae-tag" *ngIf="a.tag">{{ a.tag }}</span>
+          </div>
+        </div>
+        <div class="empty-state" *ngIf="auditLog.length === 0">
+          <div class="empty-icon">📋</div>
+          <div>Sem entradas de auditoria.</div>
+        </div>
       </div>
     </aside>
   `,
   styles: [`
+    /* ── Panel container ── */
     .panel {
-      width: 280px;
-      background: #fff;
-      border-left: 1px solid #e5e7eb;
+      width: 284px;
+      background: #0d1018;
+      border-left: 1px solid rgba(79,158,255,0.1);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
       overflow-y: auto;
       height: 100%;
+      position: relative;
     }
+
+    /* Linha de acento lateral multicolor */
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 1px;
+      height: 100%;
+      background: linear-gradient(180deg,
+        #4f9eff 0%,
+        #b87dff 33%,
+        #00e5ff 66%,
+        #00e676 100%);
+      opacity: 0.15;
+    }
+
+    /* ── Panel header ── */
+    .panel-header {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(79,158,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: rgba(79,158,255,0.03);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: rgba(240,244,255,0.45);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .panel-title-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      background: rgba(79,158,255,0.1);
+      border: 1px solid rgba(79,158,255,0.22);
+      color: #4f9eff;
+      transition: background 0.2s;
+    }
+    .panel-title-icon:hover { background: rgba(79,158,255,0.18); }
+
+    .panel-header-right {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .panel-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #00e676;
+      box-shadow: 0 0 7px #00e676;
+      animation: livePulse 1.6s infinite;
+    }
+    @keyframes livePulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.3; transform: scale(0.8); }
+    }
+    .panel-status-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: #00e676;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* ── Tabs ── */
     .tab-row {
       display: flex;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid rgba(79,158,255,0.08);
       flex-shrink: 0;
+      background: rgba(0,0,0,0.25);
+      position: relative;
     }
+
     .tab {
-      flex: 1; padding: 10px 4px;
-      font-size: 11px; color: #57606a;
-      border: none; background: transparent;
-      cursor: pointer; font-family: inherit;
-      border-bottom: 2px solid transparent;
-      text-align: center; transition: color 0.15s;
+      flex: 1;
+      padding: 10px 4px;
+      font-size: 10px;
+      color: rgba(240,244,255,0.25);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: center;
+      transition: color 0.2s;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      position: relative;
     }
-    .tab.active { color: #3b82d4; border-bottom-color: #3b82d4; font-weight: 600; }
+    .tab::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%; right: 50%;
+      height: 2px;
+      border-radius: 2px 2px 0 0;
+      transition: left 0.2s ease, right 0.2s ease;
+    }
+    .tab:hover { color: rgba(240,244,255,0.55); }
+    .tab.active { color: #4f9eff; }
+    .tab.active::after {
+      left: 10%; right: 10%;
+      background: linear-gradient(90deg, #4f9eff, #b87dff);
+      box-shadow: 0 0 8px rgba(79,158,255,0.5);
+    }
+
+    /* Slider indicator */
+    .tab-slider {
+      position: absolute;
+      bottom: 0;
+      width: 33.333%;
+      height: 2px;
+      background: linear-gradient(90deg, #4f9eff, #b87dff);
+      border-radius: 2px 2px 0 0;
+      box-shadow: 0 0 8px rgba(79,158,255,0.6);
+      transition: left 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+
     .tab-content { padding: 12px; flex: 1; }
 
-    /* catalog */
+    /* ── Section header ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      margin-top: 4px;
+    }
+    .section-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: rgba(240,244,255,0.2);
+    }
+    .section-count {
+      font-size: 9px;
+      font-weight: 700;
+      color: #4f9eff;
+      background: rgba(79,158,255,0.08);
+      border: 1px solid rgba(79,158,255,0.18);
+      border-radius: 999px;
+      padding: 1px 8px;
+    }
+    .audit-live {
+      color: #00e676 !important;
+      background: rgba(0,230,118,0.07) !important;
+      border-color: rgba(0,230,118,0.18) !important;
+      animation: livePulse 1.6s infinite;
+    }
+
+    /* ── Catalog table ── */
     .cat-table {
-      border: 1px solid #e5e7eb; border-radius: 6px;
-      overflow: hidden; margin-bottom: 8px;
+      border: 1px solid rgba(79,158,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: rgba(255,255,255,0.012);
     }
+    .cat-table:hover {
+      border-color: rgba(79,158,255,0.22);
+      box-shadow: 0 0 12px rgba(79,158,255,0.06);
+    }
+
     .ct-header {
-      background: #f7f8fa; padding: 6px 10px;
-      font-size: 11px; font-weight: 600; color: #1f2328;
-      border-bottom: 1px solid #e5e7eb;
-      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(79,158,255,0.05);
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(79,158,255,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
     }
-    .ct-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; }
+    .ct-header-left { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .ct-engine-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #00e5ff;
+      box-shadow: 0 0 6px rgba(0,229,255,0.6);
+      flex-shrink: 0;
+      animation: livePulse 2.5s infinite;
+    }
+    .ct-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      color: rgba(240,244,255,0.7);
+      font-weight: 600;
+    }
     .ct-engine {
-      font-size: 9px; background: #eff4ff;
-      color: #3b82d4; padding: 1px 5px; border-radius: 3px;
+      font-size: 8px;
+      background: rgba(0,229,255,0.08);
+      color: #00e5ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(0,229,255,0.2);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      flex-shrink: 0;
     }
     .ct-row {
-      padding: 5px 10px; font-size: 11px;
-      border-bottom: 1px solid #f0f2f5;
-      display: flex; gap: 6px; align-items: center;
+      padding: 5px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.025);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      transition: background 0.15s;
     }
+    .ct-row:hover { background: rgba(79,158,255,0.04); }
     .ct-row:last-of-type { border-bottom: none; }
-    .ct-col { color: #57606a; flex: 1; }
+    .ct-col {
+      color: rgba(240,244,255,0.6);
+      flex: 1;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+    }
     .ct-type {
-      font-size: 9px; color: #7c5cd8;
-      background: #f5f0ff; padding: 1px 4px; border-radius: 3px;
+      font-size: 9px;
+      color: #b87dff;
+      background: rgba(184,125,255,0.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid rgba(184,125,255,0.18);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
     .ct-more {
-      padding: 5px 10px; font-size: 10px;
-      color: #3b82d4; cursor: pointer;
-      border-top: 1px solid #f0f2f5;
+      padding: 5px 10px;
+      font-size: 10px;
+      color: rgba(79,158,255,0.55);
+      cursor: pointer;
+      border-top: 1px solid rgba(255,255,255,0.025);
+      transition: background 0.15s, color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
+    .ct-more:hover { background: rgba(79,158,255,0.05); color: #4f9eff; }
 
-    /* saved question */
+    /* ── Saved question ── */
     .saved-q {
-      font-size: 11px; background: #f7f8fa;
-      border: 1px solid #e5e7eb; border-radius: 6px;
-      padding: 8px 10px; color: #57606a;
+      font-size: 11px;
+      background: rgba(255,255,255,0.012);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 10px 12px;
+      transition: all 0.2s;
+      cursor: pointer;
+      margin-bottom: 6px;
     }
-    .sq-title { font-weight: 600; color: #1f2328; margin-bottom: 3px; }
-    .sq-desc  { margin-bottom: 6px; }
-    .sq-tags  { display: flex; gap: 5px; flex-wrap: wrap; }
-    .tag { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
-    .tag-green  { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
-    .tag-blue   { background: #eff4ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+    .saved-q:hover {
+      border-color: rgba(79,158,255,0.2);
+      background: rgba(79,158,255,0.03);
+      transform: translateX(2px);
+    }
+    .sq-title {
+      font-weight: 700;
+      color: rgba(240,244,255,0.65);
+      margin-bottom: 4px;
+      font-size: 11.5px;
+      line-height: 1.4;
+    }
+    .sq-meta {
+      margin-bottom: 8px;
+      font-size: 10px;
+      color: rgba(240,244,255,0.45);
+    }
+    .sq-tags { display: flex; gap: 5px; flex-wrap: wrap; }
 
-    /* history */
+    .stag {
+      font-size: 9px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .stag.green { background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.2); color: #00e676; }
+    .stag.blue  { background: rgba(79,158,255,0.08); border: 1px solid rgba(79,158,255,0.2); color: #4f9eff; }
+
+    /* ── History ── */
     .history-item {
-      padding: 8px 0; border-bottom: 1px solid #f0f2f5;
-      cursor: pointer; font-size: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      cursor: pointer;
+      transition: padding-left 0.2s, background 0.15s;
+      border-radius: 6px;
     }
     .history-item:last-child { border-bottom: none; }
-    .hi-q { color: #1f2328; font-weight: 500; margin-bottom: 2px; }
+    .history-item:hover {
+      padding-left: 5px;
+      background: rgba(79,158,255,0.03);
+    }
+
+    .hi-number {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      background: rgba(79,158,255,0.08);
+      border: 1px solid rgba(79,158,255,0.16);
+      color: #4f9eff;
+      font-size: 9px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+      font-family: "JetBrains Mono", monospace;
+    }
+    .hi-body { flex: 1; min-width: 0; }
+    .hi-q {
+      color: rgba(240,244,255,0.65);
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 11.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .hi-meta {
-      font-size: 10px; color: #57606a;
-      display: flex; gap: 8px;
+      display: flex;
+      gap: 7px;
+      font-size: 10px;
+      font-family: "JetBrains Mono", monospace;
     }
-    .hi-db { color: #3b82d4; }
+    .hi-db   { color: #00e5ff; }
+    .hi-stat { color: rgba(240,244,255,0.2); }
+    .hi-time {
+      font-size: 9px;
+      color: rgba(240,244,255,0.12);
+      font-family: "JetBrains Mono", monospace;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
 
-    /* audit */
+    /* ── Audit ── */
     .audit-entry {
-      font-size: 10px; color: #57606a;
-      padding: 5px 0; border-bottom: 1px solid #f0f2f5;
-      display: flex; gap: 6px; align-items: flex-start; flex-wrap: wrap;
+      display: flex;
+      gap: 8px;
+      padding: 6px 0;
     }
-    .ae-time { flex-shrink: 0; width: 42px; }
-    .ae-action { color: #1f2328; flex: 1; }
+    .ae-timeline {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      padding-top: 4px;
+    }
+    .ae-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #b87dff;
+      border: 1px solid rgba(184,125,255,0.4);
+      box-shadow: 0 0 6px rgba(184,125,255,0.4);
+      flex-shrink: 0;
+    }
+    .ae-line {
+      flex: 1;
+      width: 1px;
+      background: linear-gradient(180deg, rgba(184,125,255,0.15), transparent);
+      min-height: 12px;
+    }
+    .ae-body { flex: 1; min-width: 0; padding-bottom: 8px; }
+    .ae-time {
+      font-size: 9px;
+      color: rgba(184,125,255,0.55);
+      font-family: "JetBrains Mono", monospace;
+      margin-bottom: 2px;
+    }
+    .ae-action {
+      font-size: 11px;
+      color: rgba(240,244,255,0.65);
+      line-height: 1.4;
+    }
     .ae-tag {
-      font-size: 9px; background: #f7f8fa;
-      border: 1px solid #e5e7eb; border-radius: 3px;
-      padding: 0 4px; color: #57606a; flex-shrink: 0;
+      display: inline-flex;
+      margin-top: 4px;
+      font-size: 9px;
+      background: rgba(184,125,255,0.07);
+      border: 1px solid rgba(184,125,255,0.15);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: #b87dff;
     }
 
-    .empty-state { font-size: 12px; color: #57606a; padding: 8px 0; }
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 28px 0;
+      color: rgba(240,244,255,0.12);
+      font-size: 12px;
+    }
+    .empty-icon {
+      font-size: 26px;
+      margin-bottom: 10px;
+      opacity: 0.25;
+    }
   `],
 })
 export class RightPanelComponent implements OnInit {
@@ -206,27 +582,27 @@ export class RightPanelComponent implements OnInit {
 
   activeTab: PanelTab = 'catalog';
 
-  tables:        CatalogTable[]  = [];
-  history:       HistoryEntry[]  = [];
-  auditLog:      AuditEntry[]    = [];
+  get tabSliderLeft(): string {
+    const i = ['catalog','history','audit'].indexOf(this.activeTab);
+    return `${i * 33.333}%`;
+  }
+
+  tables:         CatalogTable[]  = [];
+  history:        HistoryEntry[]  = [];
+  auditLog:       AuditEntry[]    = [];
   savedQuestions: SavedQuestion[] = [];
 
   ngOnInit(): void {
-    // ── Catálogo: GET /api/catalog/resolve?intent=sales_drop ────
     this.catalogSvc.resolveByIntent('sales_drop').subscribe(t => this.tables = t);
-
-    // ── Perguntas similares: GET /api/questions/saved?similar=true ──
     this.questionsSvc.getSimilar('sales_drop').subscribe(q => this.savedQuestions = q);
   }
 
   setTab(tab: PanelTab): void {
     this.activeTab = tab;
     if (tab === 'history' && this.history.length === 0) {
-      // GET /api/queries/history?userId=alex.rodrigues@acme.com&limit=50
       this.querySvc.getHistory('alex.rodrigues@acme.com').subscribe(h => this.history = h);
     }
     if (tab === 'audit' && this.auditLog.length === 0) {
-      // GET /api/audit/session/:sessionId
       this.auditSvc.getSession('sess_9f3a').subscribe(a => this.auditLog = a);
     }
   }

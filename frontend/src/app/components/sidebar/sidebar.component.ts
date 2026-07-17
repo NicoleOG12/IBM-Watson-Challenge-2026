@@ -1,142 +1,361 @@
 // ============================================================
-// sidebar.component.ts
+// sidebar.component.ts — Neon Dark v4 · Lucide icons
 // ============================================================
 import { Component, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  LucideAngularModule,
+  LUCIDE_ICONS,
+  LucideIconProvider,
+  BotMessageSquare,
+  Database,
+  History,
+  Star,
+  LayoutDashboard,
+  FileText,
+  NotebookText,
+  Settings,
+} from 'lucide-angular';
 
 export type NavItem = 'chat' | 'catalog' | 'history' | 'saved-questions' | 'dashboards' | 'reports' | 'logs' | 'settings';
+
+interface NavEntry {
+  id: NavItem;
+  label: string;
+  icon: string;  // nome do ícone Lucide (kebab-case)
+  color: 'blue' | 'cyan' | 'purple' | 'amber' | 'green' | 'pink';
+  badge?: string;
+  live?: boolean;
+}
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
+  providers: [
+    { provide: LUCIDE_ICONS, multi: true, useValue: new LucideIconProvider({ BotMessageSquare, Database, History, Star, LayoutDashboard, FileText, NotebookText, Settings }) },
+  ],
   template: `
-    <!-- ── SIDEBAR ── -->
-    <!-- Rotas planejadas: cada item emite navTo para o AppComponent ou RouterLink -->
-    <aside class="sidebar">
+    <aside class="sidebar" role="navigation" aria-label="Menu principal">
 
-      <div class="sidebar-section">
-        <div class="sidebar-label">Navegação</div>
+      <!-- Decorativo — oculto de leitores de tela -->
+      <div class="sb-accent-line" aria-hidden="true"></div>
 
-        <!-- Route: /chat (default) -->
-        <div class="sidebar-item" [class.active]="active === 'chat'" (click)="navigate('chat')">
-          <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v10H8.5l-3 2.5V12H2z"/></svg>
-          Chat com Bob
-          <span class="dot"></span>
-        </div>
+      <!-- ── NAVEGAÇÃO ── -->
+      <div class="sb-scroll">
+        <nav aria-label="Navegação">
+          <div class="sb-section-label" id="nav-nav">Navegação</div>
+          <div class="sb-items" role="list" aria-labelledby="nav-nav">
+            <button *ngFor="let item of navItems"
+                 type="button"
+                 role="listitem"
+                 class="sb-item"
+                 [class.active]="active === item.id"
+                 [attr.data-color]="item.color"
+                 [attr.aria-current]="active === item.id ? 'page' : null"
+                 [attr.aria-label]="item.label + (item.badge ? ', ' + item.badge + ' itens' : '') + (item.live ? ', ao vivo' : '')"
+                 (click)="navigate(item.id)">
+              <div class="sb-item-icon" [class]="'ic-' + item.color" aria-hidden="true">
+                <lucide-icon [name]="item.icon" [size]="15" [strokeWidth]="1.75"></lucide-icon>
+              </div>
+              <span class="sb-item-label">{{ item.label }}</span>
+              <div class="sb-item-end" aria-hidden="true">
+                <span *ngIf="item.live" class="live-dot"></span>
+                <span *ngIf="item.badge" class="item-badge" [class]="'bd-' + item.color">{{ item.badge }}</span>
+              </div>
+            </button>
+          </div>
+        </nav>
 
-        <!-- Route: /catalog | GET /api/catalog/tables -->
-        <div class="sidebar-item" [class.active]="active === 'catalog'" (click)="navigate('catalog')">
-          <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 3h14v2H1zm0 4h14v2H1zm0 4h14v2H1z"/></svg>
-          Catálogo de Dados
-        </div>
+        <div class="sb-divider" aria-hidden="true"></div>
 
-        <!-- Route: /history | GET /api/queries/history?userId=&limit=50 -->
-        <div class="sidebar-item" [class.active]="active === 'history'" (click)="navigate('history')">
-          <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 4v4.25l3 1.75-.5.87-3.5-2.03V5h1z"/></svg>
-          Histórico
-        </div>
+        <nav aria-label="Outputs">
+          <div class="sb-section-label" id="nav-outputs">Outputs</div>
+          <div class="sb-items" role="list" aria-labelledby="nav-outputs">
+            <button *ngFor="let item of outputItems"
+                 type="button"
+                 role="listitem"
+                 class="sb-item"
+                 [class.active]="active === item.id"
+                 [attr.data-color]="item.color"
+                 [attr.aria-current]="active === item.id ? 'page' : null"
+                 [attr.aria-label]="item.label + (item.badge ? ', ' + item.badge + ' itens' : '')"
+                 (click)="navigate(item.id)">
+              <div class="sb-item-icon" [class]="'ic-' + item.color" aria-hidden="true">
+                <lucide-icon [name]="item.icon" [size]="15" [strokeWidth]="1.75"></lucide-icon>
+              </div>
+              <span class="sb-item-label">{{ item.label }}</span>
+              <div class="sb-item-end" aria-hidden="true">
+                <span *ngIf="item.badge" class="item-badge" [class]="'bd-' + item.color">{{ item.badge }}</span>
+              </div>
+            </button>
+          </div>
+        </nav>
 
-        <!-- Route: /saved-questions | GET /api/questions/saved?userId= -->
-        <div class="sidebar-item" [class.active]="active === 'saved-questions'" (click)="navigate('saved-questions')">
-          <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 4.5L15 6l-3.5 3.5.8 5L8 12l-4.3 2.5.8-5L1 6l5-.5z"/></svg>
-          Perguntas Prontas
-        </div>
+        <div class="sb-divider" aria-hidden="true"></div>
+
+        <nav aria-label="Sistema">
+          <div class="sb-section-label" id="nav-system">Sistema</div>
+          <div class="sb-items" role="list" aria-labelledby="nav-system">
+            <button *ngFor="let item of systemItems"
+                 type="button"
+                 role="listitem"
+                 class="sb-item"
+                 [class.active]="active === item.id"
+                 [attr.data-color]="item.color"
+                 [attr.aria-current]="active === item.id ? 'page' : null"
+                 [attr.aria-label]="item.label"
+                 (click)="navigate(item.id)">
+              <div class="sb-item-icon" [class]="'ic-' + item.color" aria-hidden="true">
+                <lucide-icon [name]="item.icon" [size]="15" [strokeWidth]="1.75"></lucide-icon>
+              </div>
+              <span class="sb-item-label">{{ item.label }}</span>
+            </button>
+          </div>
+        </nav>
       </div>
 
-      <hr class="divider" />
-
-      <div class="sidebar-section">
-        <div class="sidebar-label">Outputs Gerados</div>
-
-        <!-- Route: /outputs/dashboards | GET /api/outputs?type=dashboard&userId= -->
-        <div class="sidebar-item" [class.active]="active === 'dashboards'" (click)="navigate('dashboards')">
-          <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 1h6v6H1zm8 0h6v6H9zM1 9h6v6H1zm8 0h6v6H9z"/></svg>
-          Dashboards
+      <!-- ── FOOTER: Conexões ── -->
+      <div class="sb-footer" role="status" aria-label="Status das conexões de banco de dados">
+        <div class="sb-footer-title" aria-hidden="true">Conexões</div>
+        <div class="conn-list">
+          <div class="conn-row green" aria-label="BigQuery: conectado, latência 12 milissegundos">
+            <div class="conn-led" aria-hidden="true"></div>
+            <span class="conn-name">BigQuery</span>
+            <span class="conn-ms" aria-hidden="true">12ms</span>
+          </div>
+          <div class="conn-row green" aria-label="Redshift: conectado, latência 38 milissegundos">
+            <div class="conn-led" aria-hidden="true"></div>
+            <span class="conn-name">Redshift</span>
+            <span class="conn-ms" aria-hidden="true">38ms</span>
+          </div>
+          <div class="conn-row amber" aria-label="S3: em espera">
+            <div class="conn-led" aria-hidden="true"></div>
+            <span class="conn-name">S3</span>
+            <span class="conn-ms" aria-hidden="true">stand-by</span>
+          </div>
         </div>
-
-        <!-- Route: /outputs/reports | GET /api/outputs?type=report&userId= -->
-        <div class="sidebar-item" [class.active]="active === 'reports'" (click)="navigate('reports')">
-          <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h10l2 2v12H1V3zm2 4h8v1H5zm0 3h8v1H5zm0 3h5v1H5z"/></svg>
-          Relatórios
-        </div>
-
-        <!-- Route: /outputs/logs | GET /api/outputs?type=logbook&userId= -->
-        <div class="sidebar-item" [class.active]="active === 'logs'" (click)="navigate('logs')">
-          <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1h9l3 3v11H2V1zm5 5H4v1h3zm6 0H8v1h5zm-6 3H4v1h3zm6 0H8v1h5z"/></svg>
-          Diário de Bordo
-        </div>
-      </div>
-
-      <hr class="divider" />
-
-      <div class="sidebar-section">
-        <div class="sidebar-label">Admin</div>
-        <!-- Route: /settings | GET/PUT /api/settings/database-connections -->
-        <div class="sidebar-item" [class.active]="active === 'settings'" (click)="navigate('settings')">
-          <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3 3 0 100 6 3 3 0 000-6zM3 10c0-2 2.5-3 5-3s5 1 5 3v1H3v-1z"/></svg>
-          Configurações
-        </div>
-      </div>
-
-      <div class="sidebar-footer">
-        <div class="footer-label">Fontes conectadas:</div>
-        <span class="db-tag">BigQuery</span>
-        <span class="db-tag">Redshift</span>
-        <span class="db-tag">S3</span>
       </div>
     </aside>
   `,
   styles: [`
     .sidebar {
-      width: 220px;
-      background: #fff;
-      border-right: 1px solid #e5e7eb;
-      display: flex;
-      flex-direction: column;
+      width: 234px;
+      background: #101420;
+      border-right: 1px solid rgba(255,255,255,0.07);
+      display: flex; flex-direction: column;
+      flex-shrink: 0; height: 100%;
+      position: relative; overflow: hidden;
+      transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── Modo icon-only (tablet 640–1023px) ── */
+    @media (min-width: 640px) and (max-width: 1023px) {
+      .sidebar { width: 64px; }
+      .sb-section-label { display: none; }
+      .sb-item-label { display: none; }
+      .sb-item-end { display: none; }
+      .sb-item { justify-content: center; padding: 10px 0; gap: 0; }
+      .sb-item-icon { margin: 0 auto; }
+      .sb-divider { margin: 4px 8px; }
+      .sb-footer { padding: 10px 8px; }
+      .sb-footer-title { display: none; }
+      .conn-name { display: none; }
+      .conn-ms { display: none; }
+      .conn-row { justify-content: center; padding: 6px 0; gap: 0; }
+      .sb-scroll { padding: 8px 8px; }
+    }
+
+    /* ── Modo drawer mobile (posicionamento via app.css) ── */
+    @media (max-width: 639px) {
+      .sidebar { width: 240px; }
+    }
+
+    /* Linha de acento vertical (colorida) */
+    .sb-accent-line {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+      background: linear-gradient(180deg,
+        #4f9eff 0%, #b87dff 33%, #00e5ff 66%, #00e676 100%
+      );
+      opacity: 0.6;
+    }
+
+    /* ── Logo ── */
+    .sb-logo-area {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 16px 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
       flex-shrink: 0;
-      overflow-y: auto;
-      height: 100%;
     }
-    .sidebar-section { padding: 14px 14px 6px; }
-    .sidebar-label {
-      font-size: 10px; color: #57606a;
-      text-transform: uppercase; letter-spacing: 0.6px;
-      margin-bottom: 6px; font-weight: 600;
+    .sb-logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, #0f1e38, #1a2a4a);
+      border: 1px solid rgba(79,158,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 12px rgba(79,158,255,0.15);
     }
-    .sidebar-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 7px 10px; border-radius: 5px;
-      cursor: pointer; color: #1f2328; font-size: 13px;
-      margin-bottom: 1px; transition: background 0.15s;
+    .sb-logo-name {
+      font-size: 14px; font-weight: 900; color: #ffffff;
+      letter-spacing: 3px; opacity: 0.9;
+    }
+
+    /* ── Scroll ── */
+    .sb-scroll { flex: 1; overflow-y: auto; padding: 8px 10px 8px 12px; }
+
+    /* ── Section ── */
+    .sb-section { margin-bottom: 4px; }
+    .sb-section-label {
+      font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.2px; color: rgba(255,255,255,0.35);
+      padding: 10px 8px 5px;
+    }
+    .sb-items { display: flex; flex-direction: column; gap: 2px; }
+
+    /* ── Item (button reset + estilos) ── */
+    .sb-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: rgba(255,255,255,0.55);
+      font-size: 13px; font-weight: 500;
+      transition: background 0.18s, color 0.18s, border-color 0.18s;
+      border: 1px solid transparent;
+      position: relative;
       user-select: none;
+      /* reset button */
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+      outline: none;
     }
-    .sidebar-item:hover { background: #f7f8fa; }
-    .sidebar-item.active { background: #eff4ff; color: #3b82d4; font-weight: 500; }
-    .icon { width: 16px; height: 16px; flex-shrink: 0; }
-    .dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #24a148; margin-left: auto;
+    .sb-item:focus-visible {
+      outline: 2px solid #4f9eff;
+      outline-offset: -2px;
+      border-radius: 10px;
     }
-    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 8px 0; }
-    .sidebar-footer {
-      margin-top: auto; padding: 12px 14px;
-      border-top: 1px solid #e5e7eb;
-      font-size: 11px; color: #57606a;
+    .sb-item:hover {
+      color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.08);
     }
-    .footer-label { margin-bottom: 5px; }
-    .db-tag {
-      display: inline-block;
-      background: #f7f8fa; border: 1px solid #e5e7eb;
-      border-radius: 3px; padding: 1px 5px;
-      font-size: 10px; margin-right: 4px; margin-bottom: 3px;
-      color: #3b82d4;
+
+    /* Active state: cor diferente para cada item */
+    .sb-item.active[data-color="blue"]   { background: rgba(79,158,255,0.14);  border-color: rgba(79,158,255,0.3);   color: #4f9eff;  }
+    .sb-item.active[data-color="cyan"]   { background: rgba(0,229,255,0.12);   border-color: rgba(0,229,255,0.3);    color: #00e5ff;  }
+    .sb-item.active[data-color="purple"] { background: rgba(184,125,255,0.14); border-color: rgba(184,125,255,0.3);  color: #b87dff;  }
+    .sb-item.active[data-color="amber"]  { background: rgba(255,171,0,0.12);   border-color: rgba(255,171,0,0.3);    color: #ffab00;  }
+    .sb-item.active[data-color="green"]  { background: rgba(0,230,118,0.12);   border-color: rgba(0,230,118,0.3);    color: #00e676;  }
+    .sb-item.active[data-color="pink"]   { background: rgba(255,77,158,0.12);  border-color: rgba(255,77,158,0.3);   color: #ff4d9e;  }
+
+    /* Indicator bar */
+    .sb-item.active::before {
+      content: ''; position: absolute;
+      left: -1px; top: 20%; bottom: 20%;
+      width: 3px; border-radius: 0 3px 3px 0;
     }
-  `],
+    .sb-item.active[data-color="blue"]::before   { background: #4f9eff; box-shadow: 0 0 10px #4f9eff; }
+    .sb-item.active[data-color="cyan"]::before   { background: #00e5ff; box-shadow: 0 0 10px #00e5ff; }
+    .sb-item.active[data-color="purple"]::before { background: #b87dff; box-shadow: 0 0 10px #b87dff; }
+    .sb-item.active[data-color="amber"]::before  { background: #ffab00; box-shadow: 0 0 10px #ffab00; }
+    .sb-item.active[data-color="green"]::before  { background: #00e676; box-shadow: 0 0 10px #00e676; }
+    .sb-item.active[data-color="pink"]::before   { background: #ff4d9e; box-shadow: 0 0 10px #ff4d9e; }
+
+    /* ── Icon wrapper ── */
+    .sb-item-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.04);
+      transition: all 0.2s;
+    }
+    .ic-blue   { color: #4f9eff;  } .sb-item.active[data-color="blue"]   .sb-item-icon { background: rgba(79,158,255,0.18);  border-color: rgba(79,158,255,0.4);  box-shadow: 0 0 12px rgba(79,158,255,0.2); }
+    .ic-cyan   { color: #00e5ff;  } .sb-item.active[data-color="cyan"]   .sb-item-icon { background: rgba(0,229,255,0.15);   border-color: rgba(0,229,255,0.4);   box-shadow: 0 0 12px rgba(0,229,255,0.2); }
+    .ic-purple { color: #b87dff;  } .sb-item.active[data-color="purple"] .sb-item-icon { background: rgba(184,125,255,0.18); border-color: rgba(184,125,255,0.4); box-shadow: 0 0 12px rgba(184,125,255,0.2); }
+    .ic-amber  { color: #ffab00;  } .sb-item.active[data-color="amber"]  .sb-item-icon { background: rgba(255,171,0,0.15);   border-color: rgba(255,171,0,0.4);   box-shadow: 0 0 12px rgba(255,171,0,0.2); }
+    .ic-green  { color: #00e676;  } .sb-item.active[data-color="green"]  .sb-item-icon { background: rgba(0,230,118,0.15);   border-color: rgba(0,230,118,0.4);   box-shadow: 0 0 12px rgba(0,230,118,0.2); }
+    .ic-pink   { color: #ff4d9e;  } .sb-item.active[data-color="pink"]   .sb-item-icon { background: rgba(255,77,158,0.15);  border-color: rgba(255,77,158,0.4);  box-shadow: 0 0 12px rgba(255,77,158,0.2); }
+
+    .sb-item-label { flex: 1; }
+    .sb-item-end { display: flex; align-items: center; gap: 5px; }
+
+    /* Live dot */
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #00e676; box-shadow: 0 0 8px #00e676;
+      animation: pulseGlow 2s infinite;
+    }
+    @keyframes pulseGlow { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* Badge */
+    .item-badge {
+      font-size: 9px; font-weight: 800; padding: 2px 6px;
+      border-radius: 999px; border: 1px solid;
+    }
+    .bd-blue   { background: rgba(79,158,255,0.15);  color: #4f9eff;  border-color: rgba(79,158,255,0.35); }
+    .bd-amber  { background: rgba(255,171,0,0.15);   color: #ffab00;  border-color: rgba(255,171,0,0.35); }
+    .bd-cyan   { background: rgba(0,229,255,0.12);   color: #00e5ff;  border-color: rgba(0,229,255,0.3); }
+    .bd-green  { background: rgba(0,230,118,0.12);   color: #00e676;  border-color: rgba(0,230,118,0.3); }
+
+    /* Divider */
+    .sb-divider {
+      height: 1px; margin: 6px 8px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 50%, transparent);
+    }
+
+    /* ── Footer ── */
+    .sb-footer {
+      flex-shrink: 0; padding: 12px 16px 16px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      background: rgba(0,0,0,0.2);
+    }
+    .sb-footer-title {
+      font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: rgba(255,255,255,0.2); margin-bottom: 8px;
+    }
+    .conn-list { display: flex; flex-direction: column; gap: 5px; }
+    .conn-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 8px;
+      border: 1px solid; font-size: 11.5px;
+    }
+    .conn-row.green { background: rgba(0,230,118,0.06); border-color: rgba(0,230,118,0.2); color: rgba(255,255,255,0.7); }
+    .conn-row.amber { background: rgba(255,171,0,0.06);  border-color: rgba(255,171,0,0.2);  color: rgba(255,255,255,0.5); }
+    .conn-led {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .conn-row.green .conn-led { background: #00e676; box-shadow: 0 0 8px #00e676; animation: pulseGlow 2s infinite; }
+    .conn-row.amber .conn-led { background: #ffab00; box-shadow: 0 0 6px #ffab00; }
+    .conn-name { flex: 1; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .conn-ms {
+      font-size: 10px; font-family: "JetBrains Mono", monospace;
+      font-weight: 600;
+    }
+    .conn-row.green .conn-ms { color: #00e676; opacity: 0.9; }
+    .conn-row.amber .conn-ms { color: #ffab00; opacity: 0.9; }
+  `]
 })
 export class SidebarComponent {
   active: NavItem = 'chat';
   navTo = output<NavItem>();
+
+  navItems: NavEntry[] = [
+    { id: 'chat',            label: 'Chat com Bob',      color: 'blue',   live: true,  icon: 'bot-message-square' },
+    { id: 'catalog',         label: 'Catálogo de Dados', color: 'cyan',               icon: 'database' },
+    { id: 'history',         label: 'Histórico',         color: 'purple', badge: '12', icon: 'history' },
+    { id: 'saved-questions', label: 'Perguntas Prontas', color: 'amber',  badge: '5',  icon: 'star' },
+  ];
+
+  outputItems: NavEntry[] = [
+    { id: 'dashboards', label: 'Dashboards',      color: 'green', badge: '3', icon: 'layout-dashboard' },
+    { id: 'reports',    label: 'Relatórios',       color: 'blue',             icon: 'file-text' },
+    { id: 'logs',       label: 'Diário de Bordo',  color: 'pink',             icon: 'notebook-text' },
+  ];
+
+  systemItems: NavEntry[] = [
+    { id: 'settings', label: 'Configurações', color: 'purple', icon: 'settings' },
+  ];
 
   navigate(item: NavItem): void {
     this.active = item;

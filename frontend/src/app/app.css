@@ -1,36 +1,348 @@
 /* ============================================================
-   app.css — Shell layout
+   app.css — Neon Dark v4 · Responsivo (mobile → wide desktop)
+
+   Breakpoints:
+     xs:  < 640px   → mobile (bottom-nav, drawer)
+     sm:  640–1023px → tablet (sidebar icon-only 64px)
+     md:  1024–1279px → desktop (sidebar 234px, sem right-panel)
+     lg:  ≥ 1280px  → wide (sidebar + right-panel)
    ============================================================ */
 
+/* ── Shell raiz ── */
 :host {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh; /* dynamic viewport height — evita bug iOS safari */
   overflow: hidden;
+  background: var(--bg, #0c0e15);
 }
 
 .shell {
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
 }
 
-/* placeholder para rotas não implementadas */
+/* ── main-content: ocupa o espaço restante ── */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0; /* evita overflow em flex */
+}
+
+/* ── Right panel: visível só em wide ── */
+.right-panel-wrap {
+  display: none;
+}
+
+/* ── Status bar: oculta em mobile ── */
+.status-bar-wrap {
+  display: block;
+}
+
+/* ── Overlay sidebar mobile ── */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(2px);
+  z-index: 99;
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+.sidebar-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── Bottom nav mobile ── */
+.bottom-nav {
+  display: none;
+  height: 60px;
+  background: #0d1018;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+  z-index: 50;
+}
+.bn-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.35);
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.18s;
+  padding: 6px 4px;
+  letter-spacing: 0.02em;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.bn-item:focus-visible { color: #6480ff; }
+.bn-item.active {
+  color: #6480ff;
+}
+.bn-item.active svg {
+  filter: drop-shadow(0 0 6px rgba(100,128,255,0.6));
+}
+
+/* ── Placeholder ── */
 .placeholder {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f7f8fa;
+  background: var(--bg, #0c0e15);
+  position: relative;
+  overflow: hidden;
 }
+
+/* Grade animada de fundo */
+.ph-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(79,158,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,158,255,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridDrift 25s linear infinite;
+  pointer-events: none;
+}
+@keyframes gridDrift {
+  0%   { background-position: 0 0, 0 0; }
+  100% { background-position: 40px 40px, 40px 40px; }
+}
+
+/* Glows decorativos */
+.ph-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+}
+.ph-glow-1 {
+  width: 460px; height: 300px;
+  top: 20%; left: 15%;
+  background: radial-gradient(ellipse, rgba(79,158,255,0.10) 0%, transparent 70%);
+  animation: glowPulse 6s ease-in-out infinite alternate;
+}
+.ph-glow-2 {
+  width: 340px; height: 340px;
+  bottom: 10%; right: 10%;
+  background: radial-gradient(ellipse, rgba(184,125,255,0.09) 0%, transparent 70%);
+  animation: glowPulse 8s ease-in-out infinite alternate-reverse;
+}
+@keyframes glowPulse {
+  0%   { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 1;   transform: scale(1.15); }
+}
+
+/* Inner card */
 .placeholder-inner {
   text-align: center;
-  color: #57606a;
+  position: relative; z-index: 1;
+  animation: phEntry 0.65s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  padding: 40px 40px 36px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+  backdrop-filter: blur(12px);
+  max-width: 420px; width: 90%;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03) inset,
+    0 24px 64px rgba(0,0,0,0.5);
 }
-.ph-icon  { font-size: 40px; margin-bottom: 12px; }
+@keyframes phEntry {
+  from { opacity: 0; transform: translateY(32px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Anel orbital */
+.ph-orbit {
+  position: relative;
+  width: 80px; height: 80px;
+  margin: 0 auto 20px;
+}
+.ph-orbit-ring {
+  position: absolute;
+  inset: 0; border-radius: 50%;
+  border: 1.5px solid transparent;
+}
+.ph-ring-1 {
+  border-top-color: #4f9eff;
+  border-right-color: rgba(79,158,255,0.25);
+  animation: orbSpin 2.2s linear infinite;
+}
+.ph-ring-2 {
+  inset: 10px;
+  border-top-color: #b87dff;
+  border-left-color: rgba(184,125,255,0.25);
+  animation: orbSpin 3.4s linear infinite reverse;
+}
+.ph-ring-3 {
+  inset: 20px;
+  border-top-color: #00e5ff;
+  border-right-color: rgba(0,229,255,0.2);
+  animation: orbSpin 1.8s linear infinite;
+}
+.ph-orbit-dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px; height: 14px; border-radius: 50%;
+  background: linear-gradient(135deg, #6480ff, #a855f7);
+  box-shadow: 0 0 16px rgba(100,128,255,0.7), 0 0 32px rgba(168,85,247,0.35);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+@keyframes orbSpin  { to { transform: rotate(360deg); } }
+@keyframes dotPulse {
+  0%,100% { transform: translate(-50%,-50%) scale(1); }
+  50%     { transform: translate(-50%,-50%) scale(1.3); }
+}
+
+/* Tag de módulo */
+.ph-module-tag {
+  display: inline-block;
+  font-size: 9px; font-weight: 800; letter-spacing: 2px;
+  color: #4f9eff;
+  background: rgba(79,158,255,0.1);
+  border: 1px solid rgba(79,158,255,0.25);
+  border-radius: 999px;
+  padding: 3px 12px; margin-bottom: 8px;
+}
+
+/* Título */
 .ph-title {
-  font-size: 18px; font-weight: 600;
-  color: #1f2328; text-transform: capitalize;
-  margin-bottom: 6px;
+  font-size: 22px; font-weight: 900;
+  background: linear-gradient(135deg, #4f9eff 0%, #b87dff 60%, #00e5ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
 }
-.ph-desc { font-size: 13px; max-width: 320px; }
+
+/* Barra de progresso */
+.ph-progress-bar {
+  height: 3px; border-radius: 3px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden; margin-bottom: 6px;
+}
+.ph-progress-fill {
+  height: 100%; width: 40%;
+  background: linear-gradient(90deg, #4f9eff, #b87dff, #00e5ff);
+  background-size: 200% 100%;
+  border-radius: 3px;
+  animation: progressAnim 2.4s ease-in-out infinite;
+}
+@keyframes progressAnim {
+  0%   { width: 20%; background-position: 0% 0%; }
+  50%  { width: 70%; background-position: 100% 0%; }
+  100% { width: 20%; background-position: 0% 0%; }
+}
+.ph-progress-label {
+  font-size: 8.5px; font-weight: 700; letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.28); text-align: right;
+  margin-bottom: 14px;
+}
+
+/* Descrição */
+.ph-desc {
+  font-size: 13px;
+  line-height: 1.75; color: rgba(240,244,255,0.5);
+  margin-bottom: 20px;
+}
+
+/* Tech chips */
+.ph-tech-chips {
+  display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+}
+.ph-chip {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.5);
+}
+
+/* ════════════════════════════════════════
+   TABLET  640px – 1023px
+   sidebar: icon-only (64px)
+   right-panel: oculto
+   status-bar: visível
+   bottom-nav: oculto
+════════════════════════════════════════ */
+@media (min-width: 640px) {
+  .bottom-nav { display: none !important; }
+  .status-bar-wrap { display: block; }
+}
+
+/* ════════════════════════════════════════
+   DESKTOP  1024px – 1279px
+   sidebar: largura normal (234px)
+   right-panel: oculto
+════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  .right-panel-wrap { display: none; }
+}
+
+/* ════════════════════════════════════════
+   WIDE  ≥ 1280px
+   right-panel: visível
+════════════════════════════════════════ */
+@media (min-width: 1280px) {
+  .right-panel-wrap { display: flex; }
+}
+
+/* ════════════════════════════════════════
+   MOBILE  < 640px
+   sidebar: drawer (fora da tela, desliza)
+   right-panel: oculto
+   status-bar: oculta
+   bottom-nav: visível
+════════════════════════════════════════ */
+@media (max-width: 639px) {
+  .status-bar-wrap { display: none !important; }
+  .right-panel-wrap { display: none !important; }
+  .bottom-nav { display: flex; }
+  .sidebar-overlay { display: block; }
+
+  /* Sidebar vira drawer fora da tela */
+  app-sidebar {
+    position: fixed !important;
+    left: -260px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    z-index: 100 !important;
+    transition: left 0.28s cubic-bezier(0.4,0,0.2,1) !important;
+    box-shadow: none;
+    height: 100dvh !important;
+  }
+  app-sidebar.drawer-open {
+    left: 0 !important;
+    box-shadow: 4px 0 32px rgba(0,0,0,0.7) !important;
+  }
+}
+
+/* ════════════════════════════════════════
+   TABLET APENAS  640px – 1023px
+   sidebar: icon-only 64px
+════════════════════════════════════════ */
+@media (min-width: 640px) and (max-width: 1023px) {
+  app-sidebar {
+    width: 64px !important;
+    min-width: 64px !important;
+    overflow: visible !important;
+  }
+}

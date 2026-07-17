@@ -1,93 +1,106 @@
 <!-- ============================================================
-     chat.component.html
+     chat.component.html — com roles ARIA e semântica IHC
      ============================================================ -->
 
+<!-- Skip link para acessibilidade com teclado -->
+<a class="skip-link" href="#chat-input">Ir para o campo de mensagem</a>
+
 <!-- ── CONVERSATION THREAD ── -->
-<div class="chat-area">
+<div class="chat-area"
+     role="log"
+     aria-live="polite"
+     aria-label="Conversa com Bob"
+     aria-relevant="additions">
 
   <!-- ── cada mensagem ── -->
-  <div *ngFor="let msg of messages()"
+  <article *ngFor="let msg of messages()"
        class="msg"
        [class.user]="msg.role === 'user'"
-       [class.bob]="msg.role === 'bob'">
+       [class.bob]="msg.role === 'bob'"
+       [attr.aria-label]="msg.role === 'bob' ? 'Bob respondeu' : 'Você perguntou'">
 
-    <div class="msg-avatar" [class.bob]="msg.role === 'bob'" [class.user]="msg.role === 'user'">
-      {{ msg.role === 'bob' ? 'B' : 'AR' }}
+    <div class="msg-avatar"
+         [class.bob]="msg.role === 'bob'"
+         [class.user]="msg.role === 'user'"
+         aria-hidden="true">
+      <img *ngIf="msg.role === 'bob'" src="assets/bob-avatar.png" alt="" class="bob-avatar-img"/>
+      <span *ngIf="msg.role !== 'bob'">AR</span>
     </div>
 
     <div class="msg-body">
 
       <!-- ── pipeline steps (step flow) ── -->
-      <!-- Alimentado por: POST /api/copilot/interpret -->
-      <div class="step-flow" *ngIf="msg.steps">
+      <div class="step-flow" *ngIf="msg.steps" role="list" aria-label="Etapas do processamento">
         <ng-container *ngFor="let s of msg.steps; let last = last">
           <div class="step-pill"
+               role="listitem"
                [class.done]="s.status === 'done'"
                [class.active]="s.status === 'active'"
                [class.warn]="s.status === 'warn'"
                [class.error]="s.status === 'error'"
-               [title]="s.endpoint ?? ''">
-            <span *ngIf="s.status === 'done'">✓</span>
-            <span *ngIf="s.status === 'warn'">⚠</span>
-            <span *ngIf="s.status === 'active'">●</span>
+               [title]="s.endpoint ?? ''"
+               [attr.aria-label]="s.label + ': ' + s.status">
+            <span aria-hidden="true" *ngIf="s.status === 'done'">✓</span>
+            <span aria-hidden="true" *ngIf="s.status === 'warn'">⚠</span>
+            <span aria-hidden="true" *ngIf="s.status === 'active'">●</span>
             {{ s.label }}
           </div>
-          <span class="step-arrow" *ngIf="!last">›</span>
+          <span class="step-arrow" aria-hidden="true" *ngIf="!last">›</span>
         </ng-container>
       </div>
 
       <!-- ── SQL Preview Card ── -->
-      <!-- Alimentado por: POST /api/sql/generate + /validate + /estimate-cost -->
-      <div class="card sql-card" *ngIf="msg.sqlPreview as p">
+      <div class="card sql-card" *ngIf="msg.sqlPreview as p" role="region" aria-label="Prévia do SQL gerado">
         <div class="card-header">
           <div class="card-header-left">
-            <span class="tag tag-dark">SQL Preview</span>
+            <span class="tag tag-dark" aria-hidden="true">SQL Preview</span>
             SQL gerado automaticamente
           </div>
-          <span class="table-ref" [title]="p.table">{{ p.table }}</span>
+          <span class="table-ref" [title]="p.table" aria-label="Tabela: {{ p.table }}">{{ p.table }}</span>
         </div>
         <div class="card-body">
 
-          <!-- bloco de código SQL -->
-          <!-- POST /api/sql/generate — resultado renderizado -->
-          <pre class="sql-block"><code>{{ p.sql }}</code></pre>
+          <!-- bloco SQL -->
+          <pre class="sql-block" role="region" aria-label="Código SQL gerado"><code>{{ p.sql }}</code></pre>
 
-          <!-- validação de segurança: POST /api/sql/validate -->
-          <div class="sql-safe" *ngIf="p.validation.safe">
-            ✓ Nenhuma operação destrutiva detectada (sem DELETE / DROP / TRUNCATE)
+          <!-- validação -->
+          <div class="sql-safe" *ngIf="p.validation.safe" role="status" aria-live="polite">
+            <span aria-hidden="true">✓</span> Nenhuma operação destrutiva detectada (sem DELETE / DROP / TRUNCATE)
           </div>
-          <div class="sql-unsafe" *ngIf="!p.validation.safe">
-            ⚠ Atenção: {{ p.validation.warnings.join(', ') }}
+          <div class="sql-unsafe" *ngIf="!p.validation.safe" role="alert">
+            <span aria-hidden="true">⚠</span> Atenção: {{ p.validation.warnings.join(', ') }}
           </div>
 
-          <!-- estimativa de custo: POST /api/sql/estimate-cost -->
-          <div class="cost-row">
-            <div class="cost-chip warn">
+          <!-- estimativa de custo -->
+          <div class="cost-row" role="list" aria-label="Estimativa de custo da consulta">
+            <div class="cost-chip warn" role="listitem">
               Dados varridos: <strong>{{ p.cost.bytesScanned }}</strong>
             </div>
-            <div class="cost-chip warn">
+            <div class="cost-chip warn" role="listitem">
               Custo estimado: <strong>{{ p.cost.estimatedCost }}</strong>
             </div>
-            <div class="cost-chip">
+            <div class="cost-chip" role="listitem">
               Tabela: <strong>{{ p.cost.table }}</strong>
             </div>
-            <div class="cost-chip">
+            <div class="cost-chip" role="listitem">
               Engine: <strong>{{ p.cost.engine }}</strong>
             </div>
           </div>
 
-          <!-- ações de aprovação/cancelamento -->
-          <!-- POST /api/query/execute | PUT /api/sql/override | DELETE /api/query/cancel -->
-          <div class="action-row" style="margin-top:10px;">
-            <button class="btn btn-primary" (click)="executeQuery()" [disabled]="flowState() === 'executing'">
+          <!-- ações -->
+          <div class="action-row" style="margin-top:10px;" role="group" aria-label="Ações da consulta">
+            <button class="btn btn-primary" type="button"
+                    (click)="executeQuery()"
+                    [disabled]="flowState() === 'executing'"
+                    [attr.aria-busy]="flowState() === 'executing'"
+                    aria-describedby="sql-exec-hint">
               {{ flowState() === 'executing' ? '⏳ Executando...' : '▶ Executar consulta' }}
             </button>
-            <button class="btn btn-secondary">
-              <!-- PUT /api/sql/override — usuário edita SQL manualmente -->
+            <span id="sql-exec-hint" class="sr-only">Executa a consulta SQL no banco de dados selecionado</span>
+            <button class="btn btn-secondary" type="button" aria-label="Editar o SQL manualmente">
               ✎ Editar SQL
             </button>
-            <button class="btn btn-danger" (click)="cancelQuery()">
-              <!-- DELETE /api/query/cancel/:sessionId -->
+            <button class="btn btn-danger" type="button" (click)="cancelQuery()" aria-label="Cancelar a consulta em andamento">
               ✕ Cancelar
             </button>
           </div>
@@ -95,21 +108,21 @@
       </div>
 
       <!-- ── Results Table ── -->
-      <!-- Alimentado por: GET /api/query/results/:executionId -->
-      <div class="card result-card" *ngIf="msg.results as r">
+      <div class="card result-card" *ngIf="msg.results as r" role="region" [attr.aria-label]="'Resultados: ' + r.rowCount + ' linhas em ' + r.durationMs + 'ms'">
         <div class="card-header">
           <div class="card-header-left">
-            <span class="tag tag-green">Resultados</span>
-            {{ r.rowCount }} linhas retornadas em {{ r.durationMs }}ms
+            <span class="tag tag-green" aria-hidden="true">Resultados</span>
+            <span aria-live="polite">{{ r.rowCount }} linhas retornadas em {{ r.durationMs }}ms</span>
           </div>
-          <!-- GET /api/query/results/:executionId?format=csv -->
-          <span class="csv-link" title="Exportar CSV">↓ CSV</span>
+          <button class="csv-link" type="button" aria-label="Exportar resultados em CSV">
+            <span aria-hidden="true">↓</span> CSV
+          </button>
         </div>
         <div class="card-body">
-          <table class="result-table">
+          <table class="result-table" role="grid" [attr.aria-label]="'Tabela de resultados com ' + r.columns.length + ' colunas'">
             <thead>
               <tr>
-                <th *ngFor="let col of r.columns">{{ col }}</th>
+                <th scope="col" *ngFor="let col of r.columns">{{ col }}</th>
               </tr>
             </thead>
             <tbody>
@@ -121,75 +134,74 @@
               </tr>
             </tbody>
           </table>
-          <div class="has-more" *ngIf="r.hasMore">
-            + mais linhas… <span class="link">ver todos</span>
+          <div class="has-more" *ngIf="r.hasMore" role="note">
+            + mais linhas… <button class="link" type="button">ver todos</button>
           </div>
         </div>
       </div>
 
       <!-- ── Insights + Output Selector ── -->
-      <!-- Alimentado por: POST /api/insights/generate -->
       <ng-container *ngIf="msg.insights">
-        <div class="card insight-card">
+        <div class="card insight-card" role="region" aria-label="Insights gerados pelo Bob">
           <div class="card-header">
             <div class="card-header-left">
-              <span class="tag tag-purple">Insights</span>
+              <span class="tag tag-purple" aria-hidden="true">Insights</span>
               Análise gerada pelo Bob
             </div>
           </div>
-          <div class="card-body insight-list">
+          <div class="card-body insight-list" role="list">
             <div *ngFor="let ins of msg.insights"
+                 role="listitem"
                  class="insight-item"
                  [class.positive]="ins.type === 'positive'"
                  [class.warning]="ins.type === 'warning'"
                  [class.info]="ins.type === 'info'">
-              <span class="ins-icon">{{ ins.icon }}</span>
+              <span class="ins-icon" aria-hidden="true">{{ ins.icon }}</span>
               <span [innerHTML]="ins.text"></span>
             </div>
           </div>
         </div>
 
         <!-- Output Selector -->
-        <!-- POST /api/outputs/generate { type, executionId } -->
-        <div class="card output-card" *ngIf="msg.showOutputSelector">
+        <div class="card output-card" *ngIf="msg.showOutputSelector" role="region" aria-label="Seletor de formato de saída">
           <div class="card-header">
             <div class="card-header-left">
-              <span class="tag tag-dark">Saída</span>
+              <span class="tag tag-dark" aria-hidden="true">Saída</span>
               Como deseja receber esta análise?
             </div>
           </div>
           <div class="card-body">
-            <div class="output-grid">
-              <!-- POST /api/outputs/generate { type: 'executive_summary' } -->
-              <div class="out-tile" (click)="generateOutput('executive_summary')">
-                <div class="out-icon">📄</div>
+            <div class="output-grid" role="group" aria-label="Formatos de saída disponíveis">
+              <button class="out-tile" type="button"
+                      (click)="generateOutput('executive_summary')"
+                      aria-label="Gerar Resumo Executivo em PDF para liderança">
+                <div class="out-icon" aria-hidden="true">📄</div>
                 <div class="out-label">Resumo Executivo</div>
                 <div class="out-desc">PDF para liderança</div>
-              </div>
-              <!-- POST /api/outputs/generate { type: 'dashboard' } -->
-              <div class="out-tile" (click)="generateOutput('dashboard')">
-                <div class="out-icon">📊</div>
+              </button>
+              <button class="out-tile" type="button"
+                      (click)="generateOutput('dashboard')"
+                      aria-label="Gerar Dashboard com gráficos interativos">
+                <div class="out-icon" aria-hidden="true">📊</div>
                 <div class="out-label">Dashboard</div>
                 <div class="out-desc">Gráficos interativos</div>
-              </div>
-              <!-- POST /api/outputs/generate { type: 'logbook' } -->
-              <div class="out-tile" (click)="generateOutput('logbook')">
-                <div class="out-icon">📓</div>
+              </button>
+              <button class="out-tile" type="button"
+                      (click)="generateOutput('logbook')"
+                      aria-label="Gerar Diário de Bordo com rastreabilidade total">
+                <div class="out-icon" aria-hidden="true">📓</div>
                 <div class="out-label">Diário de Bordo</div>
                 <div class="out-desc">Rastreabilidade total</div>
-              </div>
+              </button>
             </div>
 
             <!-- Ações externas -->
             <div class="actions-footer">
-              <div class="actions-label">Ações disponíveis:</div>
-              <div class="action-row">
-                <!-- POST /api/actions/trigger { actionType: 'jira_ticket' } -->
-                <button class="btn btn-ghost" (click)="triggerAction('jira_ticket')">+ Criar tarefa no Jira</button>
-                <!-- POST /api/actions/trigger { actionType: 'send_email' } -->
-                <button class="btn btn-ghost" (click)="triggerAction('send_email')">✉ Enviar por e-mail</button>
-                <!-- POST /api/questions/save -->
-                <button class="btn btn-ghost" (click)="saveQuestion()">★ Salvar pergunta</button>
+              <div class="actions-label" aria-hidden="true">Ações disponíveis:</div>
+              <div class="action-row" role="group" aria-label="Ações externas">
+                <button class="btn btn-ghost" type="button" (click)="triggerAction('jira_ticket')">+ Criar tarefa no Jira</button>
+                <button class="btn btn-ghost" type="button" (click)="triggerAction('send_email')">✉ Enviar por e-mail</button>
+                <button class="btn btn-ghost" type="button" (click)="saveQuestion()">★ Salvar pergunta</button>
               </div>
             </div>
           </div>
@@ -197,35 +209,43 @@
       </ng-container>
 
       <!-- ── Next Steps ── -->
-      <!-- GET /api/copilot/next-steps?executionId= -->
-      <div class="card next-card" *ngIf="msg.nextSteps">
+      <div class="card next-card" *ngIf="msg.nextSteps" role="region" aria-label="Próximos passos sugeridos">
         <div class="card-body">
-          <div class="next-title">Próximos passos sugeridos:</div>
-          <div class="next-steps">
+          <div class="next-title" id="next-steps-title">Próximos passos sugeridos:</div>
+          <div class="next-steps" role="list" aria-labelledby="next-steps-title">
             <button *ngFor="let s of msg.nextSteps"
+                    role="listitem"
+                    type="button"
                     class="next-step-btn"
-                    (click)="sendNextStep(s)">
+                    (click)="sendNextStep(s)"
+                    [attr.aria-label]="'Sugerir: ' + s">
               › {{ s }}
             </button>
           </div>
         </div>
       </div>
 
-      <!-- ── Texto simples (greeting, feedback, etc.) ── -->
+      <!-- ── Texto simples ── -->
       <div class="msg-bubble"
            *ngIf="msg.text"
            [innerHTML]="msg.text">
       </div>
 
-      <div class="msg-time">{{ msg.time }}</div>
+      <div class="msg-time" aria-label="Enviado às {{ msg.time }}">{{ msg.time }}</div>
     </div>
-  </div>
+  </article>
 
-  <!-- loading indicator while bob is thinking -->
-  <div class="msg bob" *ngIf="flowState() === 'thinking'">
-    <div class="msg-avatar bob">B</div>
+  <!-- Indicador "Bob está pensando" -->
+  <div class="msg bob"
+       *ngIf="flowState() === 'thinking'"
+       role="status"
+       aria-live="polite"
+       aria-label="Bob está processando sua pergunta">
+    <div class="msg-avatar bob" aria-hidden="true">
+      <img src="assets/bob-avatar.png" alt="" class="bob-avatar-img"/>
+    </div>
     <div class="msg-body">
-      <div class="msg-bubble thinking">
+      <div class="msg-bubble thinking" aria-hidden="true">
         <span class="dot-1">●</span>
         <span class="dot-2">●</span>
         <span class="dot-3">●</span>
@@ -233,51 +253,56 @@
     </div>
   </div>
 
-  <!-- anchor for auto-scroll -->
-  <div #chatEnd></div>
+  <!-- âncora auto-scroll -->
+  <div #chatEnd aria-hidden="true"></div>
 </div>
 
 <!-- ── Quick Question Chips ── -->
-<!-- GET /api/questions/suggested?userId= -->
-<div class="quick-chips">
+<div class="quick-chips" role="group" aria-label="Perguntas sugeridas">
   <button *ngFor="let chip of chips"
+          type="button"
           class="chip"
           [disabled]="flowState() !== 'idle'"
-          (click)="sendMessage(chip)">
+          [attr.aria-disabled]="flowState() !== 'idle'"
+          (click)="sendMessage(chip)"
+          [attr.aria-label]="'Perguntar: ' + chip">
     {{ chip }}
   </button>
 </div>
 
 <!-- ── Input Bar ── -->
-<!-- POST /api/copilot/ask { question, userId, sessionId, dbEngine } -->
-<div class="input-bar">
+<div class="input-bar" role="region" aria-label="Campo de mensagem">
   <div class="input-wrap">
     <div class="input-field-wrap">
+      <label for="chat-input" class="sr-only">Faça uma pergunta sobre seus dados</label>
       <textarea
+        id="chat-input"
         class="input-field"
         rows="1"
         placeholder="Faça uma pergunta sobre seus dados... (ex: Quais clientes estão em risco de churn?)"
         [(ngModel)]="inputText"
         (keydown.enter)="$event.preventDefault(); sendMessage()"
-        [disabled]="flowState() !== 'idle'">
+        [disabled]="flowState() !== 'idle'"
+        [attr.aria-disabled]="flowState() !== 'idle'"
+        aria-multiline="true"
+        aria-describedby="input-hint">
       </textarea>
-      <div class="input-toolbar">
-        <!-- GET /api/catalog/tables — abre seletor de tabela -->
-        <button class="tool-btn">⊞ Tabela</button>
-        <!-- GET /api/questions/saved — abre perguntas prontas -->
-        <button class="tool-btn">★ Pergunta pronta</button>
-        <!-- toggle: mostrar preview sem executar -->
-        <button class="tool-btn">⬚ Só preview</button>
-        <!-- POST /api/settings/database-connections/switch -->
-        <button class="tool-btn">⛁ BigQuery ▾</button>
+      <span id="input-hint" class="sr-only">Pressione Enter para enviar ou use o botão Enviar mensagem</span>
+      <div class="input-toolbar" role="toolbar" aria-label="Ferramentas de entrada">
+        <button class="tool-btn" type="button" aria-label="Selecionar tabela do catálogo">⊞ Tabela</button>
+        <button class="tool-btn" type="button" aria-label="Usar uma pergunta pronta">★ Pergunta pronta</button>
+        <button class="tool-btn" type="button" aria-label="Visualizar SQL sem executar">⬚ Só preview</button>
+        <button class="tool-btn" type="button" aria-label="Selecionar banco de dados: BigQuery" aria-haspopup="listbox">⛁ BigQuery ▾</button>
       </div>
     </div>
 
-    <!-- POST /api/copilot/ask -->
     <button class="send-btn"
+            type="button"
             (click)="sendMessage()"
-            [disabled]="!inputText.trim() || flowState() !== 'idle'">
-      <svg viewBox="0 0 16 16" fill="white" width="16" height="16">
+            [disabled]="!inputText.trim() || flowState() !== 'idle'"
+            [attr.aria-disabled]="!inputText.trim() || flowState() !== 'idle'"
+            aria-label="Enviar mensagem">
+      <svg viewBox="0 0 16 16" fill="white" width="16" height="16" aria-hidden="true">
         <path d="M2 2l12 6-12 6V9.5l8-1.5-8-1.5z"/>
       </svg>
     </button>

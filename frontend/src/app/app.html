@@ -1,28 +1,92 @@
 <!-- ============================================================
-     app.html — Shell layout
+     app.html — Shell layout responsivo
      ============================================================ -->
 
 <!-- ── TOPBAR ── -->
-<app-navbar [engine]="engine()" />
+<app-navbar
+  [engine]="engine()"
+  [sidebarOpen]="sidebarOpen()"
+  (menuToggle)="toggleSidebar()" />
 
 <!-- ── MAIN SHELL ── -->
 <div class="shell">
-  <app-sidebar (navTo)="onNavChange($event)" />
 
-  <!-- ── CHAT (única view implementada no mock) ── -->
-  <app-chat *ngIf="activeNav() === 'chat'" />
+  <!-- Overlay escuro para fechar sidebar no mobile -->
+  <div class="sidebar-overlay"
+       [class.visible]="sidebarOpen()"
+       (click)="closeSidebar()"
+       aria-hidden="true"></div>
 
-  <!-- placeholder para outras rotas -->
-  <div class="placeholder" *ngIf="activeNav() !== 'chat'">
-    <div class="placeholder-inner">
-      <div class="ph-icon">🚧</div>
-      <div class="ph-title">{{ activeNav() }}</div>
-      <div class="ph-desc">Página em desenvolvimento. Conecte o endpoint correspondente e implemente o componente.</div>
+  <!-- Sidebar — drawer no mobile, fixo em desktop -->
+  <app-sidebar
+    [class.drawer-open]="sidebarOpen()"
+    (navTo)="onNavChange($event)" />
+
+  <!-- Conteúdo principal -->
+  <main class="main-content">
+    <!-- CHAT -->
+    <app-chat *ngIf="activeNav() === 'chat'" />
+
+    <!-- Placeholder outras rotas -->
+    <div class="placeholder" *ngIf="activeNav() !== 'chat'">
+      <!-- Grade animada de fundo -->
+      <div class="ph-grid" aria-hidden="true"></div>
+      <!-- Glows decorativos -->
+      <div class="ph-glow ph-glow-1" aria-hidden="true"></div>
+      <div class="ph-glow ph-glow-2" aria-hidden="true"></div>
+
+      <div class="placeholder-inner" role="status" [attr.aria-label]="'Módulo ' + activeNav() + ' em desenvolvimento'">
+        <!-- Anel orbital animado -->
+        <div class="ph-orbit" aria-hidden="true">
+          <div class="ph-orbit-ring ph-ring-1"></div>
+          <div class="ph-orbit-ring ph-ring-2"></div>
+          <div class="ph-orbit-ring ph-ring-3"></div>
+          <div class="ph-orbit-dot"></div>
+        </div>
+        <!-- Tag de módulo -->
+        <div class="ph-module-tag" aria-hidden="true">MÓDULO</div>
+        <!-- Nome da rota -->
+        <div class="ph-title">{{ activeNav() | uppercase }}</div>
+        <!-- Barra de progresso fake -->
+        <div class="ph-progress-bar" aria-hidden="true">
+          <div class="ph-progress-fill"></div>
+        </div>
+        <div class="ph-progress-label" aria-hidden="true">AGUARDANDO IMPLEMENTAÇÃO</div>
+        <!-- Descrição -->
+        <div class="ph-desc">
+          Módulo em construção. O endpoint e o componente<br>correspondente serão conectados em breve.
+        </div>
+      </div>
     </div>
-  </div>
+  </main>
 
-  <app-right-panel />
+  <!-- Right panel — só em wide desktop -->
+  <app-right-panel class="right-panel-wrap" />
 </div>
 
-<!-- ── STATUS BAR ── -->
-<app-status-bar />
+<!-- ── STATUS BAR (oculta em mobile) ── -->
+<app-status-bar class="status-bar-wrap" />
+
+<!-- ── BOTTOM NAV (só mobile) ── -->
+<nav class="bottom-nav" aria-label="Navegação mobile">
+  <button class="bn-item" [class.active]="activeNav() === 'chat'"
+          (click)="onNavChange('chat')" aria-label="Chat com Bob" type="button">
+    <lucide-icon name="bot-message-square" [size]="22" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+    <span>Chat</span>
+  </button>
+  <button class="bn-item" [class.active]="activeNav() === 'catalog'"
+          (click)="onNavChange('catalog')" aria-label="Catálogo" type="button">
+    <lucide-icon name="database" [size]="22" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+    <span>Catálogo</span>
+  </button>
+  <button class="bn-item" [class.active]="activeNav() === 'history'"
+          (click)="onNavChange('history')" aria-label="Histórico" type="button">
+    <lucide-icon name="history" [size]="22" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+    <span>Histórico</span>
+  </button>
+  <button class="bn-item" (click)="toggleSidebar()"
+          [class.active]="sidebarOpen()" aria-label="Menu" type="button">
+    <lucide-icon name="menu" [size]="22" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+    <span>Menu</span>
+  </button>
+</nav>
