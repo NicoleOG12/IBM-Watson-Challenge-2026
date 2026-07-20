@@ -8,7 +8,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ══════════════════════════════════════
-   TOKENS
+   TOKENS — DARK (padrão)
 ══════════════════════════════════════ */
 :root {
   /* ── Backgrounds ── */
@@ -47,10 +47,10 @@
   --red-dim:    rgba(255,82,82,0.12);
 
   /* ── Text (high contrast!) ── */
-  --text:       #f0f4ff;       /* quase branco */
-  --text-2:     #b8c4e0;       /* cinza-azul claro */
-  --text-3:     #6b7fa8;       /* muted */
-  --text-4:     #3a4a6b;       /* placeholder / very muted */
+  --text:       #f0f4ff;
+  --text-2:     #b8c4e0;
+  --text-3:     #6b7fa8;
+  --text-4:     #3a4a6b;
 
   /* ── Borders ── */
   --border:     rgba(255,255,255,0.08);
@@ -67,6 +67,60 @@
 
   /* ── Shadows ── */
   --shadow-card: 0 4px 24px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* ══════════════════════════════════════
+   TOKENS — LIGHT MODE
+══════════════════════════════════════ */
+[data-theme="light"] {
+  /* ── Backgrounds ── */
+  --bg:         #f0f2f7;
+  --bg-card:    #ffffff;
+  --bg-raised:  #e4e8f2;
+  --bg-hover:   #d8dff0;
+  --bg-active:  #cdd5ea;
+
+  /* ── Accent colors — vibrantes mas legíveis no claro ── */
+  --blue:       #2563eb;
+  --blue-dim:   rgba(37,99,235,0.12);
+  --blue-glow:  0 0 12px rgba(37,99,235,0.20);
+
+  --purple:     #7c3aed;
+  --purple-dim: rgba(124,58,237,0.12);
+  --purple-glow:0 0 12px rgba(124,58,237,0.20);
+
+  --cyan:       #0891b2;
+  --cyan-dim:   rgba(8,145,178,0.12);
+  --cyan-glow:  0 0 12px rgba(8,145,178,0.20);
+
+  --green:      #16a34a;
+  --green-dim:  rgba(22,163,74,0.12);
+  --green-glow: 0 0 12px rgba(22,163,74,0.20);
+
+  --amber:      #d97706;
+  --amber-dim:  rgba(217,119,6,0.12);
+  --amber-glow: 0 0 12px rgba(217,119,6,0.20);
+
+  --pink:       #db2777;
+  --pink-dim:   rgba(219,39,119,0.12);
+  --pink-glow:  0 0 12px rgba(219,39,119,0.20);
+
+  --red:        #dc2626;
+  --red-dim:    rgba(220,38,38,0.12);
+
+  /* ── Text — hierarquia legível ── */
+  --text:       #0f172a;
+  --text-2:     #1e293b;
+  --text-3:     #334155;
+  --text-4:     #64748b;
+
+  /* ── Borders ── */
+  --border:     rgba(0,0,0,0.12);
+  --border-2:   rgba(0,0,0,0.20);
+  --border-3:   rgba(0,0,0,0.32);
+
+  /* ── Shadows ── */
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06);
 }
 
 html, body { height: 100%; overflow: hidden; }
@@ -87,6 +141,9 @@ body {
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.12); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--blue); }
+
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: var(--blue); }
 
 /* ══════════════════════════════════════
    BUTTONS
@@ -227,3 +284,43 @@ body {
   from { transform: translateX(-100%); }
   to   { transform: translateX(100%); }
 }
+
+/* ══════════════════════════════════════
+   LIGHT MODE — overrides pontuais
+══════════════════════════════════════ */
+
+/* Transição suave ao trocar tema */
+body, body * {
+  transition:
+    background-color 0.28s ease,
+    border-color 0.28s ease,
+    color 0.18s ease,
+    box-shadow 0.28s ease;
+}
+/* Evita transition em elementos que animam sozinhos */
+body *[class*="spin"],
+body *[class*="pulse"],
+body *[class*="wave"],
+body *[class*="ripple"],
+body *[class*="orbit"],
+body *[class*="bar"],
+body *[class*="sweep"] {
+  transition: none !important;
+}
+
+/* Btn primary em modo claro: azul sólido, sem glow */
+[data-theme="light"] .btn-primary {
+  background: linear-gradient(135deg, #1a5fd4 0%, #1d4ed8 100%);
+  border-color: rgba(26,95,212,0.4);
+  box-shadow: 0 2px 8px rgba(26,95,212,0.30), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+[data-theme="light"] .btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(26,95,212,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+/* Tags no modo claro */
+[data-theme="light"] .tag-blue   { border-color: rgba(26,95,212,0.3); }
+[data-theme="light"] .tag-green  { border-color: rgba(4,120,87,0.3); }
+[data-theme="light"] .tag-purple { border-color: rgba(109,40,217,0.3); }
+[data-theme="light"] .tag-cyan   { border-color: rgba(3,105,161,0.3); }
+[data-theme="light"] .tag-orange { border-color: rgba(146,64,14,0.3); }

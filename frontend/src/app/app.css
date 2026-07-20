@@ -69,6 +69,12 @@
   border-top: 1px solid rgba(255,255,255,0.08);
   flex-shrink: 0;
   z-index: 50;
+  transition: background 0.28s, border-color 0.28s;
+}
+[data-theme="light"] .bottom-nav {
+  background: #e4e8f2;
+  border-top-color: rgba(0,0,0,0.12);
+  box-shadow: 0 -1px 0 rgba(0,0,0,0.08);
 }
 .bn-item {
   flex: 1;
@@ -90,12 +96,17 @@
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
+[data-theme="light"] .bn-item { color: rgba(0,0,0,0.35); }
 .bn-item:focus-visible { color: #6480ff; }
 .bn-item.active {
   color: #6480ff;
 }
+[data-theme="light"] .bn-item.active { color: #1d6fdb; }
 .bn-item.active svg {
   filter: drop-shadow(0 0 6px rgba(100,128,255,0.6));
+}
+[data-theme="light"] .bn-item.active svg {
+  filter: drop-shadow(0 0 6px rgba(29,111,219,0.5));
 }
 
 /* ── Placeholder ── */
@@ -107,6 +118,7 @@
   background: var(--bg, #0c0e15);
   position: relative;
   overflow: hidden;
+  transition: background 0.28s;
 }
 
 /* Grade animada de fundo */
@@ -162,6 +174,12 @@
   box-shadow:
     0 0 0 1px rgba(255,255,255,0.03) inset,
     0 24px 64px rgba(0,0,0,0.5);
+  transition: background 0.28s, border-color 0.28s, box-shadow 0.28s;
+}
+[data-theme="light"] .placeholder-inner {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.10);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
 }
 @keyframes phEntry {
   from { opacity: 0; transform: translateY(32px) scale(0.9); }
@@ -256,6 +274,7 @@
   color: rgba(255,255,255,0.28); text-align: right;
   margin-bottom: 14px;
 }
+[data-theme="light"] .ph-progress-label { color: rgba(0,0,0,0.35); }
 
 /* Descrição */
 .ph-desc {
@@ -263,6 +282,7 @@
   line-height: 1.75; color: rgba(240,244,255,0.5);
   margin-bottom: 20px;
 }
+[data-theme="light"] .ph-desc { color: rgba(17,24,39,0.55); }
 
 /* Tech chips */
 .ph-tech-chips {
@@ -274,6 +294,11 @@
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
   color: rgba(255,255,255,0.5);
+}
+[data-theme="light"] .ph-chip {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.1);
+  color: rgba(0,0,0,0.5);
 }
 
 /* ════════════════════════════════════════

@@ -1,7 +1,7 @@
 // ============================================================
 // app.ts — Shell da aplicação
 // ============================================================
-import { Component, signal, HostListener } from '@angular/core';
+import { Component, signal, HostListener, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   LucideAngularModule,
@@ -19,6 +19,7 @@ import { ChatComponent }       from './components/chat/chat.component';
 import { RightPanelComponent } from './components/right-panel/right-panel.component';
 import { StatusBarComponent }  from './components/status-bar/status-bar.component';
 import type { DbEngine } from './models/copilot.models';
+import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -42,6 +43,9 @@ export class App {
   engine      = signal<DbEngine>('bigquery');
   activeNav   = signal<NavItem>('chat');
   sidebarOpen = signal(false);
+
+  // injeta o ThemeService para inicializá-lo (aplica data-theme ao carregar)
+  private _theme = inject(ThemeService);
 
   onNavChange(item: NavItem): void {
     this.activeNav.set(item);

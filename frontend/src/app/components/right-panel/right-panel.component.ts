@@ -149,6 +149,11 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       overflow-y: auto;
       height: 100%;
       position: relative;
+      transition: background 0.28s, border-color 0.28s;
+    }
+    :host-context([data-theme="light"]) .panel {
+      background: #f0f2f7;
+      border-left-color: rgba(0,0,0,0.12);
     }
 
     /* Linha de acento lateral multicolor */
@@ -175,6 +180,11 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       justify-content: space-between;
       flex-shrink: 0;
       background: rgba(79,158,255,0.03);
+      transition: background 0.28s, border-color 0.28s;
+    }
+    :host-context([data-theme="light"]) .panel-header {
+      border-bottom-color: rgba(0,0,0,0.12);
+      background: #e4e8f2;
     }
 
     .panel-title {
@@ -187,6 +197,7 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
+    :host-context([data-theme="light"]) .panel-title { color: #374151; }
 
     .panel-title-icon {
       width: 24px;
@@ -271,6 +282,10 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       background: linear-gradient(90deg, #4f9eff, #b87dff);
       box-shadow: 0 0 8px rgba(79,158,255,0.5);
     }
+    :host-context([data-theme="light"]) .tab.active::after {
+      background: linear-gradient(90deg, #1d4ed8, #6d28d9);
+      box-shadow: none;
+    }
 
     /* Slider indicator */
     .tab-slider {
@@ -282,6 +297,10 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       border-radius: 2px 2px 0 0;
       box-shadow: 0 0 8px rgba(79,158,255,0.6);
       transition: left 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    :host-context([data-theme="light"]) .tab-slider {
+      background: linear-gradient(90deg, #1d4ed8, #6d28d9);
+      box-shadow: none;
     }
 
     .tab-content { padding: 12px; flex: 1; }
@@ -309,6 +328,11 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       border: 1px solid rgba(79,158,255,0.18);
       border-radius: 999px;
       padding: 1px 8px;
+    }
+    :host-context([data-theme="light"]) .section-count {
+      color: #2563eb;
+      background: rgba(37,99,235,0.10);
+      border-color: rgba(37,99,235,0.28);
     }
     .audit-live {
       color: #00e676 !important;
@@ -348,6 +372,10 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       box-shadow: 0 0 6px rgba(0,229,255,0.6);
       flex-shrink: 0;
       animation: livePulse 2.5s infinite;
+    }
+    :host-context([data-theme="light"]) .ct-engine-dot {
+      background: #0891b2;
+      box-shadow: none;
     }
     .ct-name {
       overflow: hidden;
@@ -396,6 +424,11 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.3px;
+    }
+    :host-context([data-theme="light"]) .ct-type {
+      color: #7c3aed;
+      background: rgba(124,58,237,0.10);
+      border-color: rgba(124,58,237,0.28);
     }
     .ct-more {
       padding: 5px 10px;
@@ -500,6 +533,7 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       font-family: "JetBrains Mono", monospace;
     }
     .hi-db   { color: #00e5ff; }
+    :host-context([data-theme="light"]) .hi-db { color: #0369a1; }
     .hi-stat { color: rgba(240,244,255,0.2); }
     .hi-time {
       font-size: 9px;
@@ -530,6 +564,11 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       border: 1px solid rgba(184,125,255,0.4);
       box-shadow: 0 0 6px rgba(184,125,255,0.4);
       flex-shrink: 0;
+    }
+    :host-context([data-theme="light"]) .ae-dot {
+      background: #7c3aed;
+      border-color: rgba(124,58,237,0.4);
+      box-shadow: none;
     }
     .ae-line {
       flex: 1;
@@ -572,6 +611,124 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       margin-bottom: 10px;
       opacity: 0.25;
     }
+
+    /* ════════════════════════════
+       LIGHT MODE — right-panel
+    ════════════════════════════ */
+    :host-context([data-theme="light"]) .tab-row {
+      background: #e4e8f2;
+      border-bottom-color: rgba(0,0,0,0.12);
+    }
+    :host-context([data-theme="light"]) .tab { color: #374151; }
+    :host-context([data-theme="light"]) .tab:hover { color: #111827; }
+    :host-context([data-theme="light"]) .tab.active { color: #1246b0; }
+
+    :host-context([data-theme="light"]) .section-label { color: #374151; }
+    :host-context([data-theme="light"]) .section-count {
+      color: #1246b0;
+      background: rgba(18,70,176,0.12);
+      border-color: rgba(18,70,176,0.30);
+    }
+    :host-context([data-theme="light"]) .audit-live {
+      color: #16a34a !important;
+      background: rgba(6,95,70,0.12) !important;
+      border-color: rgba(6,95,70,0.30) !important;
+    }
+
+    /* Catalog tables */
+    :host-context([data-theme="light"]) .cat-table {
+      background: #ffffff;
+      border-color: rgba(0,0,0,0.16);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    :host-context([data-theme="light"]) .cat-table:hover {
+      border-color: rgba(18,70,176,0.32);
+      box-shadow: 0 2px 10px rgba(18,70,176,0.12);
+    }
+    :host-context([data-theme="light"]) .ct-header {
+      background: #e4e8f2;
+      border-bottom-color: rgba(0,0,0,0.12);
+    }
+    :host-context([data-theme="light"]) .ct-name { color: #111827; }
+    :host-context([data-theme="light"]) .ct-engine {
+      color: #075985;
+      background: rgba(7,89,133,0.12);
+      border-color: rgba(7,89,133,0.30);
+    }
+    :host-context([data-theme="light"]) .ct-row { border-bottom-color: rgba(0,0,0,0.05); }
+    :host-context([data-theme="light"]) .ct-row:hover { background: rgba(18,70,176,0.07); }
+    :host-context([data-theme="light"]) .ct-col { color: #374151; }
+    :host-context([data-theme="light"]) .ct-type {
+      color: #5b21b6;
+      background: rgba(91,33,182,0.12);
+      border-color: rgba(91,33,182,0.30);
+    }
+    :host-context([data-theme="light"]) .ct-more {
+      color: #1246b0;
+      border-top-color: rgba(0,0,0,0.06);
+    }
+    :host-context([data-theme="light"]) .ct-more:hover {
+      background: rgba(18,70,176,0.07);
+      color: #1246b0;
+    }
+
+    /* Saved questions */
+    :host-context([data-theme="light"]) .saved-q {
+      background: #ffffff;
+      border-color: rgba(0,0,0,0.09);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    :host-context([data-theme="light"]) .saved-q:hover {
+      border-color: rgba(18,70,176,0.30);
+      background: #dbeafe;
+    }
+    :host-context([data-theme="light"]) .sq-title { color: #050810; }
+    :host-context([data-theme="light"]) .sq-meta  { color: #374151; }
+    :host-context([data-theme="light"]) .stag.green {
+      background: rgba(6,95,70,0.12);
+      border-color: rgba(6,95,70,0.30);
+      color: #16a34a;
+    }
+    :host-context([data-theme="light"]) .stag.blue {
+      background: rgba(18,70,176,0.12);
+      border-color: rgba(18,70,176,0.30);
+      color: #1246b0;
+    }
+
+    /* History */
+    :host-context([data-theme="light"]) .history-item {
+      border-bottom-color: rgba(0,0,0,0.06);
+    }
+    :host-context([data-theme="light"]) .history-item:hover { background: rgba(18,70,176,0.07); }
+    :host-context([data-theme="light"]) .hi-q  { color: #111827; }
+    :host-context([data-theme="light"]) .hi-db { color: #075985; }
+    :host-context([data-theme="light"]) .hi-stat { color: #374151; }
+    :host-context([data-theme="light"]) .hi-time { color: #4b5563; }
+    :host-context([data-theme="light"]) .hi-number {
+      background: rgba(18,70,176,0.12);
+      border-color: rgba(18,70,176,0.30);
+      color: #1246b0;
+    }
+
+    /* Audit */
+    :host-context([data-theme="light"]) .ae-dot {
+      background: #5b21b6;
+      border-color: rgba(91,33,182,0.50);
+      box-shadow: none;
+    }
+    :host-context([data-theme="light"]) .ae-line {
+      background: linear-gradient(180deg, rgba(91,33,182,0.25), transparent);
+    }
+    :host-context([data-theme="light"]) .ae-time  { color: #5b21b6; }
+    :host-context([data-theme="light"]) .ae-action { color: #111827; }
+    :host-context([data-theme="light"]) .ae-tag {
+      background: rgba(91,33,182,0.12);
+      border-color: rgba(91,33,182,0.30);
+      color: #5b21b6;
+    }
+
+    /* Empty state */
+    :host-context([data-theme="light"]) .empty-state { color: #374151; }
   `],
 })
 export class RightPanelComponent implements OnInit {

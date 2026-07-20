@@ -77,6 +77,11 @@ import { CommonModule } from '@angular/common';
       font-size: 10px;
       position: relative;
       overflow: hidden;
+      transition: background 0.28s, border-color 0.28s;
+    }
+    :host-context([data-theme="light"]) .status-bar {
+      background: #e4e8f2;
+      border-top-color: rgba(0,0,0,0.12);
     }
 
     /* Linha topo removida — evita repetição com o header */
@@ -123,6 +128,15 @@ import { CommonModule } from '@angular/common';
       background: rgba(255,171,0,0.06);
       border: 1px solid rgba(255,171,0,0.15);
     }
+    :host-context([data-theme="light"]) .status-chip.green {
+      color: #16a34a; background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.30);
+    }
+    :host-context([data-theme="light"]) .status-chip.cyan {
+      color: #0891b2; background: rgba(8,145,178,0.12); border-color: rgba(8,145,178,0.30);
+    }
+    :host-context([data-theme="light"]) .status-chip.amber {
+      color: #d97706; background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.30);
+    }
 
     .chip-dot {
       width: 5px;
@@ -133,6 +147,9 @@ import { CommonModule } from '@angular/common';
     .status-chip.green .chip-dot  { background: #00e676; box-shadow: 0 0 5px #00e676; animation: chipBlink 2s infinite; }
     .status-chip.cyan  .chip-dot  { background: #00e5ff; box-shadow: 0 0 5px #00e5ff; animation: chipBlink 1.8s infinite; }
     .status-chip.amber .chip-dot  { background: #ffab00; box-shadow: 0 0 5px #ffab00; animation: chipBlink 3s infinite; }
+    :host-context([data-theme="light"]) .status-chip.green .chip-dot { background: #16a34a; box-shadow: none; }
+    :host-context([data-theme="light"]) .status-chip.cyan  .chip-dot { background: #0891b2; box-shadow: none; }
+    :host-context([data-theme="light"]) .status-chip.amber .chip-dot { background: #d97706; box-shadow: none; }
 
     @keyframes chipBlink {
       0%,100% { opacity: 1; }
@@ -152,6 +169,7 @@ import { CommonModule } from '@angular/common';
       background: rgba(255,255,255,0.07);
       margin: 0 5px;
     }
+    :host-context([data-theme="light"]) .sb-vsep { background: rgba(0,0,0,0.22); }
 
     /* ── Mini bars ── */
     .mini-bar-wrap {
@@ -168,6 +186,8 @@ import { CommonModule } from '@angular/common';
     }
     .mini-bar:nth-child(odd)  { background: linear-gradient(180deg, #4f9eff, rgba(79,158,255,0.25)); }
     .mini-bar:nth-child(even) { background: linear-gradient(180deg, #b87dff, rgba(184,125,255,0.25)); }
+    :host-context([data-theme="light"]) .mini-bar:nth-child(odd)  { background: linear-gradient(180deg, #2563eb, rgba(37,99,235,0.3)); }
+    :host-context([data-theme="light"]) .mini-bar:nth-child(even) { background: linear-gradient(180deg, #7c3aed, rgba(124,58,237,0.3)); }
 
     .engine-label {
       font-size: 9px;
@@ -175,20 +195,24 @@ import { CommonModule } from '@angular/common';
       text-transform: uppercase;
       letter-spacing: 0.8px;
     }
+    :host-context([data-theme="light"]) .engine-label { color: #2563eb; }
 
     /* ── Breadcrumb ── */
     .path-seg {
       font-size: 10px;
       color: rgba(240,244,255,0.45);
     }
+    :host-context([data-theme="light"]) .path-seg { color: #374151; }
     .path-seg.active {
       color: #4f9eff;
       font-weight: 700;
     }
+    :host-context([data-theme="light"]) .path-seg.active { color: #1246b0; font-weight: 800; }
     .path-arrow {
       color: rgba(255,255,255,0.1);
       font-size: 12px;
     }
+    :host-context([data-theme="light"]) .path-arrow { color: rgba(0,0,0,0.30); }
 
     /* ── Right ── */
     .info-pill {
@@ -204,10 +228,16 @@ import { CommonModule } from '@angular/common';
       background: rgba(184,125,255,0.07);
       border: 1px solid rgba(184,125,255,0.18);
     }
+    :host-context([data-theme="light"]) .info-pill.session {
+      color: #7c3aed;
+      background: rgba(124,58,237,0.10);
+      border-color: rgba(124,58,237,0.28);
+    }
     .info-user {
       color: rgba(240,244,255,0.45);
       font-size: 10px;
     }
+    :host-context([data-theme="light"]) .info-user { color: #111827; }
     .info-time {
       color: #00e5ff;
       font-variant-numeric: tabular-nums;
@@ -215,6 +245,7 @@ import { CommonModule } from '@angular/common';
       font-weight: 700;
       letter-spacing: 0.03em;
     }
+    :host-context([data-theme="light"]) .info-time { color: #075985; }
   `],
 })
 export class StatusBarComponent implements OnInit, OnDestroy {

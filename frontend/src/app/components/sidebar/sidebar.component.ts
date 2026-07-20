@@ -146,7 +146,11 @@ interface NavEntry {
       display: flex; flex-direction: column;
       flex-shrink: 0; height: 100%;
       position: relative; overflow: hidden;
-      transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+      transition: width 0.25s cubic-bezier(0.4,0,0.2,1), background 0.28s, border-color 0.28s;
+    }
+    :host-context([data-theme="light"]) .sidebar {
+      background: #f0f2f7;
+      border-right-color: rgba(0,0,0,0.12);
     }
 
     /* ── Modo icon-only (tablet 640–1023px) ── */
@@ -209,6 +213,7 @@ interface NavEntry {
       letter-spacing: 1.2px; color: rgba(255,255,255,0.35);
       padding: 10px 8px 5px;
     }
+    :host-context([data-theme="light"]) .sb-section-label { color: #374151; }
     .sb-items { display: flex; flex-direction: column; gap: 2px; }
 
     /* ── Item (button reset + estilos) ── */
@@ -230,6 +235,7 @@ interface NavEntry {
       font-family: inherit;
       outline: none;
     }
+    :host-context([data-theme="light"]) .sb-item { color: #111827; }
     .sb-item:focus-visible {
       outline: 2px solid #4f9eff;
       outline-offset: -2px;
@@ -240,6 +246,11 @@ interface NavEntry {
       background: rgba(255,255,255,0.06);
       border-color: rgba(255,255,255,0.08);
     }
+    :host-context([data-theme="light"]) .sb-item:hover {
+      color: #0f172a;
+      background: #d8dff0;
+      border-color: rgba(0,0,0,0.12);
+    }
 
     /* Active state: cor diferente para cada item */
     .sb-item.active[data-color="blue"]   { background: rgba(79,158,255,0.14);  border-color: rgba(79,158,255,0.3);   color: #4f9eff;  }
@@ -248,6 +259,14 @@ interface NavEntry {
     .sb-item.active[data-color="amber"]  { background: rgba(255,171,0,0.12);   border-color: rgba(255,171,0,0.3);    color: #ffab00;  }
     .sb-item.active[data-color="green"]  { background: rgba(0,230,118,0.12);   border-color: rgba(0,230,118,0.3);    color: #00e676;  }
     .sb-item.active[data-color="pink"]   { background: rgba(255,77,158,0.12);  border-color: rgba(255,77,158,0.3);   color: #ff4d9e;  }
+
+    /* Itens ativos — modo claro: cores vibrantes */
+    :host-context([data-theme="light"]) .sb-item.active[data-color="blue"]   { background: rgba(37,99,235,0.12);   border-color: rgba(37,99,235,0.35);   color: #2563eb; }
+    :host-context([data-theme="light"]) .sb-item.active[data-color="cyan"]   { background: rgba(8,145,178,0.12);   border-color: rgba(8,145,178,0.35);   color: #0891b2; }
+    :host-context([data-theme="light"]) .sb-item.active[data-color="purple"] { background: rgba(124,58,237,0.12);  border-color: rgba(124,58,237,0.35);  color: #7c3aed; }
+    :host-context([data-theme="light"]) .sb-item.active[data-color="amber"]  { background: rgba(217,119,6,0.12);   border-color: rgba(217,119,6,0.35);   color: #d97706; }
+    :host-context([data-theme="light"]) .sb-item.active[data-color="green"]  { background: rgba(22,163,74,0.12);   border-color: rgba(22,163,74,0.35);   color: #16a34a; }
+    :host-context([data-theme="light"]) .sb-item.active[data-color="pink"]   { background: rgba(219,39,119,0.12);  border-color: rgba(219,39,119,0.35);  color: #db2777; }
 
     /* Indicator bar */
     .sb-item.active::before {
@@ -262,6 +281,14 @@ interface NavEntry {
     .sb-item.active[data-color="green"]::before  { background: #00e676; box-shadow: 0 0 10px #00e676; }
     .sb-item.active[data-color="pink"]::before   { background: #ff4d9e; box-shadow: 0 0 10px #ff4d9e; }
 
+    /* Indicator bar — modo claro */
+    :host-context([data-theme="light"]) .sb-item.active[data-color="blue"]::before   { background: #2563eb; box-shadow: none; }
+    :host-context([data-theme="light"]) .sb-item.active[data-color="cyan"]::before   { background: #0891b2; box-shadow: none; }
+    :host-context([data-theme="light"]) .sb-item.active[data-color="purple"]::before { background: #7c3aed; box-shadow: none; }
+    :host-context([data-theme="light"]) .sb-item.active[data-color="amber"]::before  { background: #d97706; box-shadow: none; }
+    :host-context([data-theme="light"]) .sb-item.active[data-color="green"]::before  { background: #16a34a; box-shadow: none; }
+    :host-context([data-theme="light"]) .sb-item.active[data-color="pink"]::before   { background: #db2777; box-shadow: none; }
+
     /* ── Icon wrapper ── */
     .sb-item-icon {
       width: 30px; height: 30px; border-radius: 8px;
@@ -270,12 +297,24 @@ interface NavEntry {
       background: rgba(255,255,255,0.04);
       transition: all 0.2s;
     }
+    :host-context([data-theme="light"]) .sb-item-icon {
+      border-color: rgba(0,0,0,0.12);
+      background: #e4e8f2;
+    }
     .ic-blue   { color: #4f9eff;  } .sb-item.active[data-color="blue"]   .sb-item-icon { background: rgba(79,158,255,0.18);  border-color: rgba(79,158,255,0.4);  box-shadow: 0 0 12px rgba(79,158,255,0.2); }
     .ic-cyan   { color: #00e5ff;  } .sb-item.active[data-color="cyan"]   .sb-item-icon { background: rgba(0,229,255,0.15);   border-color: rgba(0,229,255,0.4);   box-shadow: 0 0 12px rgba(0,229,255,0.2); }
     .ic-purple { color: #b87dff;  } .sb-item.active[data-color="purple"] .sb-item-icon { background: rgba(184,125,255,0.18); border-color: rgba(184,125,255,0.4); box-shadow: 0 0 12px rgba(184,125,255,0.2); }
     .ic-amber  { color: #ffab00;  } .sb-item.active[data-color="amber"]  .sb-item-icon { background: rgba(255,171,0,0.15);   border-color: rgba(255,171,0,0.4);   box-shadow: 0 0 12px rgba(255,171,0,0.2); }
     .ic-green  { color: #00e676;  } .sb-item.active[data-color="green"]  .sb-item-icon { background: rgba(0,230,118,0.15);   border-color: rgba(0,230,118,0.4);   box-shadow: 0 0 12px rgba(0,230,118,0.2); }
     .ic-pink   { color: #ff4d9e;  } .sb-item.active[data-color="pink"]   .sb-item-icon { background: rgba(255,77,158,0.15);  border-color: rgba(255,77,158,0.4);  box-shadow: 0 0 12px rgba(255,77,158,0.2); }
+
+    /* ── Cores dos ícones no modo claro ── */
+    :host-context([data-theme="light"]) .ic-blue   { color: #2563eb; }
+    :host-context([data-theme="light"]) .ic-cyan   { color: #0891b2; }
+    :host-context([data-theme="light"]) .ic-purple { color: #7c3aed; }
+    :host-context([data-theme="light"]) .ic-amber  { color: #d97706; }
+    :host-context([data-theme="light"]) .ic-green  { color: #16a34a; }
+    :host-context([data-theme="light"]) .ic-pink   { color: #db2777; }
 
     .sb-item-label { flex: 1; }
     .sb-item-end { display: flex; align-items: center; gap: 5px; }
@@ -286,6 +325,7 @@ interface NavEntry {
       background: #00e676; box-shadow: 0 0 8px #00e676;
       animation: pulseGlow 2s infinite;
     }
+    :host-context([data-theme="light"]) .live-dot { background: #16a34a; box-shadow: none; }
     @keyframes pulseGlow { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
     /* Badge */
@@ -298,10 +338,19 @@ interface NavEntry {
     .bd-cyan   { background: rgba(0,229,255,0.12);   color: #00e5ff;  border-color: rgba(0,229,255,0.3); }
     .bd-green  { background: rgba(0,230,118,0.12);   color: #00e676;  border-color: rgba(0,230,118,0.3); }
 
+    /* Badges — modo claro */
+    :host-context([data-theme="light"]) .bd-blue   { background: rgba(37,99,235,0.12);   color: #2563eb; border-color: rgba(37,99,235,0.35); }
+    :host-context([data-theme="light"]) .bd-amber  { background: rgba(217,119,6,0.12);   color: #d97706; border-color: rgba(217,119,6,0.35); }
+    :host-context([data-theme="light"]) .bd-cyan   { background: rgba(8,145,178,0.12);   color: #0891b2; border-color: rgba(8,145,178,0.30); }
+    :host-context([data-theme="light"]) .bd-green  { background: rgba(22,163,74,0.12);   color: #16a34a; border-color: rgba(22,163,74,0.30); }
+
     /* Divider */
     .sb-divider {
       height: 1px; margin: 6px 8px;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 50%, transparent);
+    }
+    :host-context([data-theme="light"]) .sb-divider {
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.18) 50%, transparent);
     }
 
     /* ── Footer ── */
@@ -309,11 +358,17 @@ interface NavEntry {
       flex-shrink: 0; padding: 12px 16px 16px;
       border-top: 1px solid rgba(255,255,255,0.07);
       background: rgba(0,0,0,0.2);
+      transition: background 0.28s, border-color 0.28s;
+    }
+    :host-context([data-theme="light"]) .sb-footer {
+      border-top-color: rgba(0,0,0,0.12);
+      background: #e4e8f2;
     }
     .sb-footer-title {
       font-size: 9.5px; font-weight: 700; text-transform: uppercase;
       letter-spacing: 1px; color: rgba(255,255,255,0.2); margin-bottom: 8px;
     }
+    :host-context([data-theme="light"]) .sb-footer-title { color: #374151; }
     .conn-list { display: flex; flex-direction: column; gap: 5px; }
     .conn-row {
       display: flex; align-items: center; gap: 8px;
@@ -322,18 +377,25 @@ interface NavEntry {
     }
     .conn-row.green { background: rgba(0,230,118,0.06); border-color: rgba(0,230,118,0.2); color: rgba(255,255,255,0.7); }
     .conn-row.amber { background: rgba(255,171,0,0.06);  border-color: rgba(255,171,0,0.2);  color: rgba(255,255,255,0.5); }
+    :host-context([data-theme="light"]) .conn-row.green { color: #111827; background: #d1fae5; border-color: rgba(6,95,70,0.30); }
+    :host-context([data-theme="light"]) .conn-row.amber { color: #111827; background: #fef3c7; border-color: rgba(120,53,15,0.30); }
     .conn-led {
       width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
     }
     .conn-row.green .conn-led { background: #00e676; box-shadow: 0 0 8px #00e676; animation: pulseGlow 2s infinite; }
     .conn-row.amber .conn-led { background: #ffab00; box-shadow: 0 0 6px #ffab00; }
+    :host-context([data-theme="light"]) .conn-row.green .conn-led { background: #16a34a; box-shadow: none; }
+    :host-context([data-theme="light"]) .conn-row.amber .conn-led { background: #d97706; box-shadow: none; }
     .conn-name { flex: 1; font-weight: 600; color: rgba(255,255,255,0.8); }
+    :host-context([data-theme="light"]) .conn-name { color: #050810; }
     .conn-ms {
       font-size: 10px; font-family: "JetBrains Mono", monospace;
       font-weight: 600;
     }
     .conn-row.green .conn-ms { color: #00e676; opacity: 0.9; }
     .conn-row.amber .conn-ms { color: #ffab00; opacity: 0.9; }
+    :host-context([data-theme="light"]) .conn-row.green .conn-ms { color: #16a34a; opacity: 1; }
+    :host-context([data-theme="light"]) .conn-row.amber .conn-ms { color: #d97706; opacity: 1; }
   `]
 })
 export class SidebarComponent {

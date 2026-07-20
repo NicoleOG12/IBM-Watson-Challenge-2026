@@ -1,11 +1,11 @@
 // ============================================================
-// navbar.component.ts — Neon Dark v4
-// Header alto (72px), rico em cores, texto legível
+// navbar.component.ts — Header v6: limpo mas com presença
 // ============================================================
-import { Component, input, output, OnInit, OnDestroy } from '@angular/core';
+import { Component, input, output, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, LUCIDE_ICONS, LucideIconProvider, Building2, BellDot } from 'lucide-angular';
 import type { DbEngine } from '../../models/copilot.models';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-navbar',
@@ -16,13 +16,11 @@ import type { DbEngine } from '../../models/copilot.models';
   ],
   template: `
     <header class="topnav" role="banner">
-      <!-- Decorativos — ocultos de leitores de tela -->
-      <div class="nav-sweep"   aria-hidden="true"></div>
       <div class="nav-topline" aria-hidden="true"></div>
+      <div class="nav-sweep"  aria-hidden="true"></div>
 
-      <!-- Botão hambúrguer — só mobile/tablet -->
-      <button class="menu-btn"
-              type="button"
+      <!-- Hambúrguer — só mobile/tablet -->
+      <button class="menu-btn" type="button"
               (click)="menuToggle.emit()"
               [attr.aria-expanded]="sidebarOpen()"
               aria-label="Abrir menu de navegação"
@@ -34,123 +32,178 @@ import type { DbEngine } from '../../models/copilot.models';
       <div class="nav-brand" role="img" aria-label="Bob — Corporate Data Copilot">
         <div class="brand-logo" aria-hidden="true">
           <img src="assets/bob-logo.png" alt="" class="brand-logo-img"/>
-          <div class="logo-pulse"></div>
-          <div class="logo-pulse logo-pulse-2"></div>
+          <div class="logo-ring"></div>
         </div>
-        <div class="brand-sep" aria-hidden="true"></div>
-        <div class="brand-info">
+        <div class="brand-text">
           <div class="brand-name">Bob</div>
-          <div class="brand-tagline">Corporate Data Copilot</div>
-        </div>
-        <div class="brand-badge" aria-label="Plano Enterprise ativo">
-          <span class="badge-dot" aria-hidden="true"></span>
-          ENTERPRISE
+          <div class="brand-sub">Corporate Data Copilot</div>
         </div>
       </div>
 
-      <!-- ═══ CENTER: Métricas vivas ═══ -->
-      <div class="nav-metrics" role="region" aria-label="Métricas do sistema">
-        <div class="metric-card green" role="status" aria-label="Status da IA: ativa">
-          <div class="metric-icon-wrap" aria-hidden="true">
-            <div class="ai-dot"></div>
-            <div class="ai-ripple"></div>
+      <!-- ═══ CENTER: 3 métricas compactas ═══ -->
+      <div class="nav-metrics" role="region" aria-label="Status do sistema">
+
+        <!-- IA Status -->
+        <div class="metric-tile" role="status" aria-label="IA ativa">
+          <div class="tile-icon green" aria-hidden="true">
+            <span class="ai-dot"></span>
+            <span class="ai-ring"></span>
           </div>
-          <div class="metric-content">
-            <div class="metric-label" aria-hidden="true">IA STATUS</div>
-            <div class="metric-val">ATIVA</div>
+          <div class="tile-body">
+            <div class="tile-label">IA STATUS</div>
+            <div class="tile-val">ATIVA</div>
           </div>
-          <div class="metric-bars" aria-hidden="true">
-            <div class="mbar" *ngFor="let b of bars" [style.height.px]="b"></div>
+          <div class="wave-bars" aria-hidden="true">
+            <div class="wbar" *ngFor="let b of bars" [style.height.px]="b"></div>
           </div>
         </div>
 
-        <div class="metric-card blue" role="status" [attr.aria-label]="'Consultas hoje: ' + queryCount">
-          <div class="metric-content">
-            <div class="metric-label" aria-hidden="true">CONSULTAS HOJE</div>
-            <div class="metric-val mono" aria-live="polite">{{ queryCount }}</div>
+        <!-- Latência -->
+        <div class="metric-tile" role="status" [attr.aria-label]="'Latência: ' + latency + 'ms'">
+          <div class="tile-body">
+            <div class="tile-label">LATÊNCIA</div>
+            <div class="tile-val mono">{{ latency }}<span class="tile-unit">ms</span></div>
           </div>
         </div>
 
-        <div class="metric-card purple" role="status" [attr.aria-label]="'Latência: ' + latency + ' milissegundos'">
-          <div class="metric-content">
-            <div class="metric-label" aria-hidden="true">LATÊNCIA</div>
-            <div class="metric-val mono" aria-live="polite">{{ latency }}<span class="metric-unit" aria-hidden="true">ms</span></div>
-          </div>
-        </div>
-
-        <div class="metric-card amber" role="status" [attr.aria-label]="'Motor de banco: ' + engine()">
-          <div class="metric-content">
-            <div class="metric-label" aria-hidden="true">MOTOR</div>
-            <div class="metric-val">{{ engine() | uppercase }}</div>
+        <!-- Motor -->
+        <div class="metric-tile" role="status" [attr.aria-label]="'Motor: ' + engine()">
+          <div class="tile-body">
+            <div class="tile-label">MOTOR</div>
+            <div class="tile-val">{{ engine() | uppercase }}</div>
           </div>
         </div>
       </div>
 
-      <!-- ═══ RIGHT: User ═══ -->
+              <!-- Theme Toggle -->
+        <button class="theme-toggle" type="button"
+                [class.light-active]="theme.theme() === 'light'"
+                (click)="theme.toggle()"
+                [attr.aria-label]="theme.theme() === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'"
+                [attr.aria-pressed]="theme.theme() === 'light'">
+          <span class="tt-track" aria-hidden="true">
+            <span class="tt-star tt-s1"></span>
+            <span class="tt-star tt-s2"></span>
+            <span class="tt-star tt-s3"></span>
+            <span class="tt-ray tt-r1"></span>
+            <span class="tt-ray tt-r2"></span>
+            <span class="tt-ray tt-r3"></span>
+            <span class="tt-ray tt-r4"></span>
+          </span>
+          <span class="tt-thumb" aria-hidden="true">
+            <span class="tt-icon tt-moon">
+              <svg viewBox="0 0 18 18" fill="none">
+                <path d="M14.5 10.5A7 7 0 0 1 7.5 3.5a7 7 0 0 0 0 11 7 7 0 0 0 7-3z" fill="currentColor"/>
+              </svg>
+            </span>
+            <span class="tt-icon tt-sun">
+              <svg viewBox="0 0 18 18" fill="none">
+                <circle cx="9" cy="9" r="4" fill="currentColor"/>
+                <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                  <line x1="9" y1="1"  x2="9"  y2="3.2"/>
+                  <line x1="9" y1="14.8" x2="9" y2="17"/>
+                  <line x1="1"  y1="9"  x2="3.2" y2="9"/>
+                  <line x1="14.8" y1="9" x2="17" y2="9"/>
+                  <line x1="3.2" y1="3.2" x2="4.8" y2="4.8"/>
+                  <line x1="13.2" y1="13.2" x2="14.8" y2="14.8"/>
+                  <line x1="14.8" y1="3.2" x2="13.2" y2="4.8"/>
+                  <line x1="4.8" y1="13.2" x2="3.2" y2="14.8"/>
+                </g>
+              </svg>
+            </span>
+          </span>
+        </button>
+
+      <!-- ═══ RIGHT: Workspace · Notif · Toggle · User ═══ -->
       <div class="nav-right">
-        <div class="workspace-tag" role="note" aria-label="Workspace: acme-corp-prod" tabindex="0">
-          <lucide-icon name="building-2" [size]="13" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+
+        <div class="workspace-chip" role="note" aria-label="Workspace: acme-corp-prod" tabindex="0">
+          <lucide-icon name="building-2" [size]="12" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
           acme-corp-prod
         </div>
 
-        <button class="icon-action" aria-label="Notificações — 1 nova notificação" type="button">
-          <lucide-icon name="bell-dot" [size]="16" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
-          <span class="action-badge" aria-hidden="true"></span>
-        </button>
-
-        <button class="user-pill" type="button" aria-label="Menu do usuário: Alex Rodrigues, Analista Sênior" aria-haspopup="true">
+        <!-- User pill -->
+        <button class="user-pill" type="button"
+                aria-label="Menu do usuário: Alex Rodrigues, Analista Sênior"
+                aria-haspopup="true">
           <div class="user-avatar" aria-hidden="true">
             <span>AR</span>
-            <div class="avatar-spin-ring"></div>
+            <div class="avatar-ring"></div>
           </div>
           <div class="user-info">
             <div class="user-name">Alex Rodrigues</div>
             <div class="user-role">Analista Sênior</div>
           </div>
         </button>
+
       </div>
     </header>
   `,
   styles: [`
+    /* ════════════════════════════════════════
+       TOPNAV
+    ════════════════════════════════════════ */
     .topnav {
-      height: 80px;
-      background: linear-gradient(180deg, rgba(19,23,38,0) 0%, #0e1220 100%);
+      height: 72px;
+      background: linear-gradient(180deg, #10152a 0%, #0c0f1e 100%);
       display: flex;
       align-items: center;
-      padding: 0 36px;
-      gap: 28px;
+      padding: 0 28px;
+      gap: 24px;
       flex-shrink: 0;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
       position: relative;
       overflow: hidden;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.55);
+      box-shadow: 0 4px 28px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04);
+      transition: background 0.28s, border-color 0.28s, box-shadow 0.28s;
+    }
+    :host-context([data-theme="light"]) .topnav {
+      background: #ffffff;
+      border-bottom-color: rgba(0,0,0,0.10);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.10), 0 4px 20px rgba(0,0,0,0.07);
     }
 
-    /* ── Hambúrguer: oculto por padrão, visível em mobile/tablet ── */
+    /* Linha topo gradiente animada */
+    .nav-topline {
+      position: absolute; top: 0; left: 0; right: 0; height: 2.5px;
+      background: linear-gradient(90deg,
+        #4f9eff 0%, #b87dff 25%, #00e5ff 50%, #00e676 75%, #ffab00 100%
+      );
+      background-size: 300% 100%;
+      animation: toplineShift 6s ease infinite;
+    }
+    @keyframes toplineShift {
+      0%,100% { background-position: 0% 0%; }
+      50%      { background-position: 100% 0%; }
+    }
+
+    /* Sweep decorativo */
+    .nav-sweep {
+      position: absolute; top: 0; bottom: 0; width: 120px;
+      background: linear-gradient(90deg, transparent, rgba(79,158,255,0.04), transparent);
+      animation: sweepMove 8s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes sweepMove { from { left: -120px; } to { left: 110%; } }
+
+    /* ── Hambúrguer ── */
     .menu-btn {
       display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      width: 44px; height: 44px;
-      background: rgba(255,255,255,0.05);
+      flex-direction: column; justify-content: center; align-items: center;
+      width: 42px; height: 42px;
+      background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      cursor: pointer;
-      flex-shrink: 0;
-      z-index: 1;
-      gap: 5px;
-      outline: none;
-      transition: background 0.18s;
-      padding: 0;
+      border-radius: 11px;
+      cursor: pointer; flex-shrink: 0; z-index: 1;
+      gap: 5px; outline: none; padding: 0;
+      transition: background 0.18s, border-color 0.18s;
     }
     .menu-btn:focus-visible { outline: 2px solid #6480ff; outline-offset: 2px; }
-    .menu-btn:hover { background: rgba(255,255,255,0.09); border-color: rgba(100,128,255,0.4); }
+    .menu-btn:hover { background: rgba(255,255,255,0.10); border-color: rgba(100,128,255,0.35); }
     .menu-bar, .menu-bar::before, .menu-bar::after {
-      content: '';
-      display: block;
+      content: ''; display: block;
       width: 18px; height: 2px;
-      background: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.65);
       border-radius: 2px;
       transition: transform 0.22s, opacity 0.22s;
       position: relative;
@@ -161,303 +214,370 @@ import type { DbEngine } from '../../models/copilot.models';
     .menu-bar.open::before { transform: rotate(45deg) translate(3px, 4px); background: #6480ff; }
     .menu-bar.open::after  { transform: rotate(-45deg) translate(3px, -4px); background: #6480ff; }
 
-    /* Métricas e right ocultas em telas menores */
+    :host-context([data-theme="light"]) .menu-bar,
+    :host-context([data-theme="light"]) .menu-bar::before,
+    :host-context([data-theme="light"]) .menu-bar::after { background: #1e293b; }
+    :host-context([data-theme="light"]) .menu-btn {
+      background: #c8d3e8; border-color: rgba(0,0,0,0.16);
+    }
+    :host-context([data-theme="light"]) .menu-btn:hover {
+      background: #b8c6e0;
+    }
+
     @media (max-width: 1023px) {
       .menu-btn { display: flex; }
       .nav-metrics { display: none; }
       .brand-badge { display: none; }
     }
     @media (max-width: 639px) {
-      .brand-tagline { display: none; }
-      .brand-sep { display: none; }
-      .workspace-tag { display: none; }
-      .icon-action { display: none; }
-      .nav-right { gap: 6px; }
-      .user-name { font-size: 12px; }
+      .topnav { padding: 0 14px; gap: 10px; }
+      .workspace-chip { display: none; }
+      .icon-btn { display: none; }
       .user-role { display: none; }
-      .user-pill { padding: 5px 8px 5px 5px; }
+      .brand-sub { display: none; }
     }
 
-    /* Linha colorida no topo */
-    .nav-topline {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg,
-        #4f9eff 0%, #b87dff 25%, #00e5ff 50%, #00e676 75%, #ffab00 100%
-      );
-      background-size: 200% 100%;
-      animation: gradientShift 4s ease infinite;
-    }
-    @keyframes gradientShift {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    /* Sweep */
-    .nav-sweep {
-      position: absolute; top: 0; bottom: 0;
-      width: 80px;
-      background: linear-gradient(90deg, transparent, rgba(79,158,255,0.06), transparent);
-      animation: scanMove 7s linear infinite;
-      pointer-events: none;
-    }
-    @keyframes scanMove {
-      from { left: -80px; }
-      to   { left: 110%; }
-    }
-
-    /* ═══ BRAND ═══ */
+    /* ════════════════════════════════════════
+       BRAND
+    ════════════════════════════════════════ */
     .nav-brand {
-      display: flex; align-items: center; gap: 14px;
+      display: flex; align-items: center; gap: 13px;
       flex-shrink: 0; z-index: 1;
     }
 
     .brand-logo {
       position: relative;
-      width: 58px; height: 58px;
+      width: 52px; height: 52px;
       background: #e8eaf0;
-      border: 2px solid rgba(100,130,255,0.35);
-      border-radius: 16px;
+      border: 2px solid rgba(100,128,255,0.40);
+      border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 28px rgba(100,130,255,0.32), 0 0 56px rgba(168,85,247,0.16);
+      box-shadow:
+        0 0 24px rgba(100,128,255,0.30),
+        0 0 48px rgba(168,85,247,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.5);
     }
     .brand-logo-img {
-      width: 50px; height: 50px;
-      object-fit: contain;
-      position: relative; z-index: 1;
+      width: 44px; height: 44px;
+      object-fit: contain; position: relative; z-index: 1;
     }
-    .logo-pulse {
-      position: absolute; inset: -6px; border-radius: 20px;
-      border: 1.5px solid rgba(100,130,255,0.4);
-      animation: rippleBox 3s ease-out infinite;
+    .logo-ring {
+      position: absolute; inset: -7px; border-radius: 20px;
+      border: 1.5px solid rgba(100,128,255,0.35);
+      animation: ringPulse 3s ease-out infinite;
     }
-    .logo-pulse-2 {
-      border-color: rgba(168,85,247,0.3);
-      animation-delay: 1.5s;
-    }
-    @keyframes rippleBox {
+    @keyframes ringPulse {
       0%   { transform: scale(1); opacity: 0.7; }
       100% { transform: scale(1.3); opacity: 0; }
     }
 
-    .brand-sep {
-      width: 1px; height: 44px;
-      background: linear-gradient(180deg, transparent, rgba(255,255,255,0.15), transparent);
-    }
-
-    .brand-info { display: flex; flex-direction: column; gap: 2px; }
+    .brand-text { display: flex; flex-direction: column; gap: 2px; }
     .brand-name {
-      font-size: 24px; font-weight: 900; color: #ffffff;
-      letter-spacing: -0.5px; line-height: 1;
-      background: linear-gradient(90deg, #6480ff, #a855f7);
+      font-size: 22px; font-weight: 900;
+      letter-spacing: -0.4px; line-height: 1;
+      background: linear-gradient(110deg, #7c9cff 0%, #c084fc 60%, #818cf8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .brand-tagline {
-      font-size: 12px; color: rgba(255,255,255,0.55);
-      font-weight: 400; letter-spacing: 0.02em;
+    .brand-sub {
+      font-size: 10.5px; font-weight: 400;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.02em;
     }
+    :host-context([data-theme="light"]) .brand-sub { color: #475569; }
 
     .brand-badge {
       display: flex; align-items: center; gap: 5px;
-      padding: 4px 10px; border-radius: 999px;
-      background: rgba(100,130,255,0.12);
-      border: 1px solid rgba(100,130,255,0.3);
+      padding: 4px 11px; border-radius: 999px;
+      background: rgba(100,128,255,0.10);
+      border: 1px solid rgba(100,128,255,0.28);
       font-size: 9px; font-weight: 800;
-      color: #8098ff; letter-spacing: 1.5px;
+      color: #93a8ff; letter-spacing: 1.5px;
+      flex-shrink: 0;
     }
-    .badge-dot {
+    :host-context([data-theme="light"]) .brand-badge {
+      background: rgba(30,64,175,0.08);
+      border-color: rgba(30,64,175,0.25);
+      color: #1e40af;
+    }
+    .badge-pulse {
       width: 5px; height: 5px; border-radius: 50%;
-      background: #6480ff;
-      box-shadow: 0 0 8px #6480ff;
-      animation: pulseGlow 2s infinite;
+      background: #6480ff; box-shadow: 0 0 8px #6480ff;
+      animation: blink 2s infinite;
+      flex-shrink: 0;
     }
-    @keyframes pulseGlow {
-      0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+    :host-context([data-theme="light"]) .badge-pulse {
+      background: #1e40af; box-shadow: 0 0 6px rgba(30,64,175,0.5);
     }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
 
-    /* ═══ METRICS ═══ */
+    /* ════════════════════════════════════════
+       METRICS CENTER
+    ════════════════════════════════════════ */
     .nav-metrics {
       display: flex; align-items: center; gap: 8px;
       flex: 1; justify-content: center; z-index: 1;
     }
 
-    .metric-card {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 18px; border-radius: 14px;
-      border: 1px solid;
-      min-width: 130px;
-      transition: transform 0.2s;
+    .metric-tile {
+      display: flex; align-items: center; gap: 11px;
+      padding: 9px 16px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(8px);
+      transition: border-color 0.2s, background 0.2s, transform 0.2s;
       position: relative; overflow: hidden;
+      flex-shrink: 0;
     }
-    .metric-card::before {
-      content: ''; position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+    .metric-tile::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 55%);
       pointer-events: none;
     }
-    .metric-card:hover { transform: translateY(-2px); }
-
-    .metric-card.green {
-      background: linear-gradient(135deg, rgba(0,230,118,0.12) 0%, rgba(0,230,118,0.04) 100%);
-      border-color: rgba(0,230,118,0.3);
-      box-shadow: 0 0 20px rgba(0,230,118,0.08);
-    }
-    .metric-card.blue {
-      background: linear-gradient(135deg, rgba(79,158,255,0.12) 0%, rgba(79,158,255,0.04) 100%);
-      border-color: rgba(79,158,255,0.3);
-      box-shadow: 0 0 20px rgba(79,158,255,0.08);
-    }
-    .metric-card.purple {
-      background: linear-gradient(135deg, rgba(184,125,255,0.12) 0%, rgba(184,125,255,0.04) 100%);
-      border-color: rgba(184,125,255,0.3);
-      box-shadow: 0 0 20px rgba(184,125,255,0.08);
-    }
-    .metric-card.amber {
-      background: linear-gradient(135deg, rgba(255,171,0,0.12) 0%, rgba(255,171,0,0.04) 100%);
-      border-color: rgba(255,171,0,0.3);
-      box-shadow: 0 0 20px rgba(255,171,0,0.08);
+    .metric-tile:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      transform: translateY(-1px);
     }
 
-    .metric-icon-wrap { position: relative; width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-    .ai-dot { width: 10px; height: 10px; border-radius: 50%; background: #00e676; box-shadow: 0 0 12px #00e676; animation: pulseGlow 1.8s infinite; }
-    .ai-ripple { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid rgba(0,230,118,0.4); animation: rippleCircle 2s ease-out infinite; }
-    @keyframes rippleCircle {
-      0%   { transform: scale(0.6); opacity: 1; }
-      100% { transform: scale(1.8); opacity: 0; }
+    :host-context([data-theme="light"]) .metric-tile {
+      border-color: rgba(0,0,0,0.14);
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    :host-context([data-theme="light"]) .metric-tile:hover {
+      border-color: rgba(0,0,0,0.22);
+      background: #eef2fb;
     }
 
-    .metric-content { display: flex; flex-direction: column; gap: 2px; }
-    .metric-label {
-      font-size: 9px; font-weight: 700; letter-spacing: 1px;
-      text-transform: uppercase; opacity: 0.85;
+    /* tile icon (IA dot) */
+    .tile-icon {
+      position: relative; width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
     }
-    .metric-card.green  .metric-label { color: #00e676; }
-    .metric-card.blue   .metric-label { color: #4f9eff; }
-    .metric-card.purple .metric-label { color: #b87dff; }
-    .metric-card.amber  .metric-label { color: #ffab00; }
+    .ai-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #00e676; box-shadow: 0 0 10px #00e676;
+      animation: blink 1.8s infinite;
+    }
+    .ai-ring {
+      position: absolute; inset: -4px; border-radius: 50%;
+      border: 1.5px solid rgba(0,230,118,0.4);
+      animation: ringCirc 2s ease-out infinite;
+    }
+    @keyframes ringCirc { 0% { transform:scale(0.55); opacity:1; } 100% { transform:scale(1.8); opacity:0; } }
+    :host-context([data-theme="light"]) .ai-dot {
+      background: #15803d; box-shadow: 0 0 7px rgba(21,128,61,0.55);
+    }
+    :host-context([data-theme="light"]) .ai-ring { border-color: rgba(21,128,61,0.4); }
 
-    .metric-val {
-      font-size: 17px; font-weight: 800; line-height: 1;
+    .tile-body { display: flex; flex-direction: column; gap: 1px; }
+    .tile-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.9px;
+      text-transform: uppercase; color: rgba(255,255,255,0.4);
+    }
+    :host-context([data-theme="light"]) .tile-label { color: #475569; }
+
+    .tile-val {
+      font-size: 15px; font-weight: 800; line-height: 1;
       color: #ffffff;
     }
-    .metric-val.mono { font-family: "JetBrains Mono", monospace; }
-    .metric-unit { font-size: 10px; font-weight: 600; opacity: 0.7; margin-left: 1px; }
+    :host-context([data-theme="light"]) .tile-val { color: #0f172a; }
+    .tile-val.mono { font-family: "JetBrains Mono", monospace; }
+    .tile-unit { font-size: 10px; font-weight: 600; opacity: 0.6; margin-left: 1px; }
 
-    /* Wave bars */
-    .metric-bars { display: flex; align-items: center; gap: 2px; height: 20px; }
-    .mbar {
-      width: 3px; border-radius: 2px;
-      background: #00e676;
-      min-height: 3px;
+    /* wave bars */
+    .wave-bars { display: flex; align-items: center; gap: 2px; height: 16px; }
+    .wbar {
+      width: 2.5px; border-radius: 2px;
+      background: #00e676; min-height: 2px;
       animation: waveUp 1s ease-in-out infinite alternate;
     }
-    .mbar:nth-child(2) { animation-delay: 0.1s; }
-    .mbar:nth-child(3) { animation-delay: 0.2s; }
-    .mbar:nth-child(4) { animation-delay: 0.15s; }
-    .mbar:nth-child(5) { animation-delay: 0.25s; }
-    .mbar:nth-child(6) { animation-delay: 0.05s; }
-    @keyframes waveUp {
-      0%   { transform: scaleY(0.25); opacity: 0.5; }
-      100% { transform: scaleY(1); opacity: 1; }
-    }
+    .wbar:nth-child(even) { animation-delay: 0.15s; }
+    .wbar:nth-child(3n)   { animation-delay: 0.28s; }
+    @keyframes waveUp { 0% { transform:scaleY(0.25); opacity:0.5; } 100% { transform:scaleY(1); opacity:1; } }
+    :host-context([data-theme="light"]) .wbar { background: #15803d; }
 
-    /* ═══ RIGHT ═══ */
+    /* ════════════════════════════════════════
+       RIGHT
+    ════════════════════════════════════════ */
     .nav-right {
-      display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; gap: 9px;
       flex-shrink: 0; z-index: 1;
     }
 
-    .workspace-tag {
+    /* Workspace chip */
+    .workspace-chip {
       display: flex; align-items: center; gap: 6px;
-      padding: 9px 16px; border-radius: 10px;
+      padding: 7px 14px; border-radius: 9px;
       background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      font-size: 11.5px; color: rgba(255,255,255,0.7);
-      font-weight: 500; transition: all 0.2s;
-      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.09);
+      font-size: 11.5px; color: rgba(255,255,255,0.62);
+      font-weight: 500; cursor: pointer;
+      transition: all 0.18s;
     }
-    .workspace-tag:hover { color: #fff; border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); }
+    .workspace-chip:hover { color: #fff; border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); }
+    .workspace-chip:focus-visible { outline: 2px solid #4f9eff; outline-offset: 2px; border-radius: 8px; }
+    :host-context([data-theme="light"]) .workspace-chip {
+      background: #c8d3e8; border-color: rgba(0,0,0,0.18); color: #0f172a;
+    }
+    :host-context([data-theme="light"]) .workspace-chip:hover {
+      background: #b8c6e0; border-color: rgba(0,0,0,0.28);
+    }
 
-    .icon-action {
-      width: 42px; height: 42px; border-radius: 12px;
+    /* Icon button (sino) */
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 11px;
       background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.09);
       color: rgba(255,255,255,0.5);
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s; position: relative;
+      cursor: pointer; transition: all 0.18s; position: relative;
+      outline: none;
     }
-    .icon-action:hover { color: #fff; border-color: rgba(184,125,255,0.5); background: rgba(184,125,255,0.1); }
-    .action-badge {
-      position: absolute; top: 6px; right: 6px;
+    .icon-btn:hover { color: #fff; border-color: rgba(184,125,255,0.45); background: rgba(184,125,255,0.1); }
+    .icon-btn:focus-visible { outline: 2px solid #b87dff; outline-offset: 2px; }
+    :host-context([data-theme="light"]) .icon-btn {
+      background: #c8d3e8; border-color: rgba(0,0,0,0.18); color: #1e293b;
+    }
+    :host-context([data-theme="light"]) .icon-btn:hover {
+      background: #b8c6e0; border-color: rgba(0,0,0,0.28); color: #0f172a;
+    }
+
+    /* notif dot */
+    .notif-dot {
+      position: absolute; top: 7px; right: 7px;
       width: 7px; height: 7px; border-radius: 50%;
       background: #ff4d9e; box-shadow: 0 0 8px #ff4d9e;
-      border: 1.5px solid #0e1220;
+      border: 1.5px solid #0c0f1e;
+    }
+    :host-context([data-theme="light"]) .notif-dot { border-color: #ffffff; }
+
+    /* ════════════════════════════════════════
+       THEME TOGGLE
+    ════════════════════════════════════════ */
+    .theme-toggle {
+      position: relative;
+      width: 62px; height: 32px;
+      border-radius: 999px; border: none;
+      cursor: pointer; padding: 0; outline: none; flex-shrink: 0;
+      background: linear-gradient(135deg, #0c0e1f 0%, #1a1440 50%, #0f172a 100%);
+      box-shadow:
+        0 0 0 1.5px rgba(100,128,255,0.38),
+        0 0 14px rgba(100,128,255,0.20),
+        inset 0 1px 0 rgba(255,255,255,0.07);
+      transition: background 0.42s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s;
+      overflow: hidden;
+    }
+    .theme-toggle:focus-visible { box-shadow: 0 0 0 3px rgba(100,128,255,0.5); }
+    .theme-toggle:hover {
+      box-shadow: 0 0 0 1.5px rgba(100,128,255,0.62), 0 0 18px rgba(100,128,255,0.32), inset 0 1px 0 rgba(255,255,255,0.09);
+    }
+    .theme-toggle.light-active {
+      background: linear-gradient(135deg, #7dd3fc 0%, #fde68a 50%, #fbbf24 100%);
+      box-shadow: 0 0 0 1.5px rgba(251,191,36,0.5), 0 0 14px rgba(251,191,36,0.32), inset 0 1px 0 rgba(255,255,255,0.28);
+    }
+    .theme-toggle.light-active:hover {
+      box-shadow: 0 0 0 1.5px rgba(251,191,36,0.75), 0 0 22px rgba(251,191,36,0.48), inset 0 1px 0 rgba(255,255,255,0.28);
     }
 
+    .tt-track { position: absolute; inset: 0; border-radius: 999px; overflow: hidden; pointer-events: none; }
+    .tt-star { position: absolute; border-radius: 50%; background: #fff; transition: opacity 0.35s; }
+    .tt-s1 { width: 3px; height: 3px; top: 7px;  right: 13px; opacity: 0.85; animation: starTwinkle 2s ease-in-out infinite alternate; }
+    .tt-s2 { width: 2px; height: 2px; top: 15px; right: 9px;  opacity: 0.5;  animation: starTwinkle 1.5s 0.4s ease-in-out infinite alternate; }
+    .tt-s3 { width: 2px; height: 2px; top: 9px;  right: 21px; opacity: 0.7;  animation: starTwinkle 1.8s 0.8s ease-in-out infinite alternate; }
+    @keyframes starTwinkle { 0% { opacity:0.3; transform:scale(0.8); } 100% { opacity:0.9; transform:scale(1.2); } }
+    .light-active .tt-star { opacity: 0 !important; }
+
+    .tt-ray { position: absolute; background: rgba(255,255,255,0.55); border-radius: 2px; opacity: 0; transition: opacity 0.35s; }
+    .tt-r1 { width: 9px; height: 2px; top: 8px;  left: 5px;  transform: rotate(45deg); }
+    .tt-r2 { width: 7px; height: 2px; top: 18px; left: 6px;  transform: rotate(-20deg); }
+    .tt-r3 { width: 5px; height: 2px; top: 4px;  left: 13px; transform: rotate(-60deg); }
+    .tt-r4 { width: 6px; height: 2px; top: 15px; left: 4px;  transform: rotate(70deg); }
+    .light-active .tt-ray { opacity: 1; }
+
+    .tt-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1e2a4a 0%, #2d3a6b 100%);
+      box-shadow: 0 2px 7px rgba(0,0,0,0.5), 0 0 9px rgba(100,128,255,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: transform 0.42s cubic-bezier(0.34,1.56,0.64,1), background 0.35s, box-shadow 0.35s;
+    }
+    .light-active .tt-thumb {
+      transform: translateX(30px);
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15), 0 0 12px rgba(251,191,36,0.55), inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+
+    .tt-icon { position: absolute; width: 13px; height: 13px; display: flex; align-items: center; justify-content: center; transition: opacity 0.25s, transform 0.35s; }
+    .tt-moon { color: #a5b4fc; opacity: 1; transform: scale(1); }
+    .tt-sun  { color: #fff;    opacity: 0; transform: rotate(-90deg) scale(0.5); }
+    .light-active .tt-moon { opacity: 0; transform: rotate(90deg) scale(0.5); }
+    .light-active .tt-sun  { opacity: 1; transform: rotate(0deg) scale(1); }
+
+    /* ════════════════════════════════════════
+       USER PILL
+    ════════════════════════════════════════ */
     .user-pill {
       display: flex; align-items: center; gap: 10px;
-      padding: 8px 16px 8px 8px; border-radius: 14px;
+      padding: 7px 14px 7px 7px; border-radius: 13px;
       background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.1);
-      cursor: pointer; transition: all 0.2s;
-      font-family: inherit; text-align: left;
+      border: 1px solid rgba(255,255,255,0.09);
+      cursor: pointer; transition: all 0.18s;
+      font-family: inherit; text-align: left; outline: none;
     }
-    .user-pill:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); }
-    .user-pill:focus-visible {
-      outline: 2px solid #b87dff;
-      outline-offset: 2px;
+    .user-pill:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16); }
+    .user-pill:focus-visible { outline: 2px solid #b87dff; outline-offset: 2px; }
+    :host-context([data-theme="light"]) .user-pill {
+      background: #c8d3e8; border-color: rgba(0,0,0,0.18);
     }
-
-    .icon-action:focus-visible {
-      outline: 2px solid #b87dff;
-      outline-offset: 2px;
-    }
-
-    .workspace-tag:focus-visible {
-      outline: 2px solid #4f9eff;
-      outline-offset: 2px;
-      border-radius: 9px;
+    :host-context([data-theme="light"]) .user-pill:hover {
+      background: #b8c6e0; border-color: rgba(0,0,0,0.28);
     }
 
     .user-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg, #7c3aed, #b87dff);
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, #5b21b6, #9333ea);
       display: flex; align-items: center; justify-content: center;
       font-size: 12px; font-weight: 800; color: #fff;
-      box-shadow: 0 0 16px rgba(184,125,255,0.35);
+      box-shadow: 0 0 14px rgba(147,51,234,0.4);
       position: relative; flex-shrink: 0;
     }
-    .avatar-spin-ring {
-      position: absolute; inset: -4px; border-radius: 50%;
+    .avatar-ring {
+      position: absolute; inset: -3px; border-radius: 50%;
       border: 1.5px solid transparent;
-      border-top-color: rgba(184,125,255,0.7);
-      border-right-color: rgba(184,125,255,0.3);
-      animation: orbitSpin 3s linear infinite;
+      border-top-color: rgba(167,139,250,0.65);
+      border-right-color: rgba(167,139,250,0.25);
+      animation: spinRing 3s linear infinite;
     }
-    @keyframes orbitSpin { to { transform: rotate(360deg); } }
+    @keyframes spinRing { to { transform: rotate(360deg); } }
 
     .user-info { display: flex; flex-direction: column; gap: 1px; }
-    .user-name { font-size: 13px; font-weight: 700; color: #fff; }
-    .user-role { font-size: 10px; color: rgba(255,255,255,0.5); }
+    .user-name { font-size: 13px; font-weight: 700; color: #f1f5f9; }
+    .user-role { font-size: 10px; color: rgba(255,255,255,0.45); }
+    :host-context([data-theme="light"]) .user-name { color: #0f172a; }
+    :host-context([data-theme="light"]) .user-role { color: #1e293b; }
   `]
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   engine      = input<DbEngine>('bigquery');
   sidebarOpen = input<boolean>(false);
   menuToggle  = output<void>();
-  bars: number[] = [8, 14, 10, 18, 12, 16, 9, 20, 11, 15, 8, 17];
-  queryCount = 47;
+
+  bars: number[] = [5, 9, 6, 11, 7, 10, 5, 12, 6, 9, 5, 11];
   latency = 284;
   private interval?: ReturnType<typeof setInterval>;
 
+  readonly theme = inject(ThemeService);
+
   ngOnInit(): void {
     this.interval = setInterval(() => {
-      this.bars = this.bars.map(() => Math.floor(Math.random() * 16) + 4);
-      if (Math.random() > 0.6) this.queryCount++;
-      this.latency = Math.floor(Math.random() * 180) + 150;
+      this.bars = this.bars.map(() => Math.floor(Math.random() * 9) + 3);
+      this.latency = Math.floor(Math.random() * 180) + 120;
     }, 900);
   }
   ngOnDestroy(): void { clearInterval(this.interval); }
