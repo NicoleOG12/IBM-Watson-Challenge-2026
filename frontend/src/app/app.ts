@@ -40,7 +40,7 @@ import { ThemeService } from './services/theme.service';
   styleUrl: './app.css',
 })
 export class App {
-  engine      = signal<DbEngine>('bigquery');
+  engine      = signal<DbEngine>('aws');
   activeNav   = signal<NavItem>('chat');
   sidebarOpen = signal(false);
 

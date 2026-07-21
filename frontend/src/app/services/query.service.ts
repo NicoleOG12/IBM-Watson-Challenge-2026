@@ -58,7 +58,7 @@ export class QueryService {
       map(mem => (mem.interactions ?? []).slice(-limit).reverse().map((i, idx) => ({
         executionId: `hist_${idx}`,
         question:    i.query,
-        engine:      'bigquery' as const,
+        engine:      'aws' as const,
         rowCount:    i.row_count ?? 0,
         durationMs:  0,
         timestamp:   new Date(i.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
@@ -99,7 +99,7 @@ export const MOCK_RESULT: QueryResult = {
 };
 
 const MOCK_HISTORY: HistoryEntry[] = [
-  { executionId: 'exec_7b2c', question: 'Sales drop Q3 vs Q2 by product', engine: 'bigquery', rowCount: 8,  durationMs: 2300, timestamp: '09:16' },
-  { executionId: 'exec_6a1d', question: 'Top 10 customers by revenue',    engine: 'bigquery', rowCount: 10, durationMs: 1800, timestamp: 'yesterday' },
+  { executionId: 'exec_7b2c', question: 'Sales drop Q3 vs Q2 by product', engine: 'aws', rowCount: 8,  durationMs: 2300, timestamp: '09:16' },
+  { executionId: 'exec_6a1d', question: 'Top 10 customers by revenue',    engine: 'aws', rowCount: 10, durationMs: 1800, timestamp: 'yesterday' },
   { executionId: 'exec_5c9e', question: 'Churn rate last month',          engine: 'redshift', rowCount: 1,  durationMs: 900,  timestamp: 'Mon' },
 ];

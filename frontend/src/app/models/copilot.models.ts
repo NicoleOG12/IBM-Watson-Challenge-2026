@@ -2,7 +2,7 @@
 // copilot.models.ts — Interfaces compartilhadas da aplicação
 // ============================================================
 
-export type DbEngine = 'bigquery' | 'redshift';
+export type DbEngine = 'aws' | 'redshift';
 export type StepStatus = 'pending' | 'active' | 'done' | 'warn' | 'error';
 export type OutputType = 'executive_summary' | 'dashboard' | 'logbook';
 export type ActionType = 'jira_ticket' | 'send_email' | 'create_record';

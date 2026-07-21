@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     # Set to True to use mock LLM responses (no API key required)
     WATSONX_MOCK: bool = True
 
+    # IBM Consulting Advantage (ICA)
+    ICA_KEY: str = ""
+    ICA_BASE_URL: str = "https://api.nextgen-beta.ica.ibm.com/ica/v1"
+    # Chat model ID to use for NL→SQL generation via /chat-models/chat/completions
+    ICA_MODEL_ID: str = "meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
+    # Set to False to route NL→SQL through the real ICA API
+    ICA_MOCK: bool = True
+
     # Database
     DATABASE_URL: str = "postgresql://user:password@localhost:5432/copilot"
     # Set to True to use in-memory SQLite mock data (no real DB required)

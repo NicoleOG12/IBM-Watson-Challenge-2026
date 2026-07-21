@@ -1,37 +1,67 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { delay, of, Observable } from 'rxjs';
 import { Insight } from '../models/copilot.models';
+import { CopilotStateService } from './copilot-state.service';
 
 // ─────────────────────────────────────────────────────────────
 // InsightsService
 //
-// PARA ALTERNAR ENTRE MOCK E REAL:
-//   → Mock  : bloco `of(MOCK_INSIGHTS).pipe(delay(ms))`  ← ATIVO
-//   → Real  : descomente `this.http.post(...)` e comente o MOCK
+// Reads insights from the CopilotStateService cache — the full
+// pipeline (including insights) already ran inside POST /query.
+// Falls back to mock data when no cached response is available.
 // ─────────────────────────────────────────────────────────────
-
-const API = '/api';
 
 @Injectable({ providedIn: 'root' })
 export class InsightsService {
-  // REAL → descomente:
-  // private http = inject(HttpClient);
+  private state = inject(CopilotStateService);
 
-  // ── POST /api/insights/generate ─────────────────────────
-  // Corpo: { executionId: string; context: string }
-  // Resposta: { insights: Insight[] }
-  // O IBM Bob analisa o resultado da query e gera insights
-  // em linguagem de negócio (pt-BR)
+  // ── Read insights from cached BackendQueryResponse ───────
+  // The backend computes insights as part of the NL→SQL→Execute
+  // pipeline. We map them to the frontend Insight shape here.
+  // Falls back to mock data when cache is empty.
   // --------------------------------------------------------
   generate(executionId: string): Observable<Insight[]> {
-    // ── MOCK ────────────────────────────────────────────────
+    const cached = this.state.lastResponse();
+    if (cached?.result?.insights) {
+      const ins = cached.result.insights;
+      const insights: Insight[] = [
+        // Summary as an info card
+        ...(ins.summary ? [{ type: 'info' as const, icon: 'i', text: ins.summary }] : []),
+        // Key insights
+        ...ins.key_insights.map(k => ({
+          type: this.categoryToType(k.category),
+          icon: this.categoryToIcon(k.category),
+          text: k.message,
+        })),
+        // Trends
+        ...ins.trends.map(t => ({
+          type: 'positive' as const,
+          icon: 'up',
+          text: t.message,
+        })),
+        // Anomalies
+        ...ins.anomalies.map(a => ({
+          type: 'warning' as const,
+          icon: '!',
+          text: a.message,
+        })),
+      ];
+      return of(insights.slice(0, 5)); // cap at 5 cards
+    }
+    // ── Fallback to mock when no cached response ────────────
     return of(MOCK_INSIGHTS).pipe(delay(1200));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.post<Insight[]>(`${API}/insights/generate`, {
-    //   executionId,
-    //   context: 'sales_drop_q3_vs_q2',
-    // });
+  }
+
+  private categoryToType(category: string): Insight['type'] {
+    if (category === 'anomaly' || category === 'warning') return 'warning';
+    if (category === 'positive' || category === 'trend')  return 'positive';
+    return 'info';
+  }
+
+  private categoryToIcon(category: string): string {
+    if (category === 'anomaly' || category === 'warning') return '!';
+    if (category === 'positive' || category === 'trend')  return 'up';
+    return 'i';
   }
 }
 

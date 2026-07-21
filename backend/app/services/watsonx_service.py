@@ -46,17 +46,17 @@ STRICT RULES — you MUST follow all of them:
 4. Always include an explanation field that describes in plain English what
    the SQL does.
 5. Return your response as valid JSON with exactly these two keys:
-   { "sql": "<SELECT statement>", "explanation": "<plain English explanation>" }
+   {{ "sql": "<SELECT statement>", "explanation": "<plain English explanation>" }}
 6. Do not include markdown code fences, comments, or any text outside the JSON object.
 
 EXAMPLE INPUT:
   Show me total sales by region for last quarter.
 
 EXAMPLE OUTPUT:
-  {
+  {{
     "sql": "SELECT region, SUM(amount) AS total_sales FROM sales WHERE sale_date >= DATE_TRUNC('quarter', NOW() - INTERVAL '3 months') GROUP BY region ORDER BY total_sales DESC",
     "explanation": "Aggregates total sales by region for the previous quarter, ordered from highest to lowest."
-  }
+  }}
 
 Translate the following question into a SQL SELECT query following the rules above.
 

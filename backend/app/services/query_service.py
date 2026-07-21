@@ -30,7 +30,8 @@ from app.models.insight import InsightReport
 from app.models.response import FormattedResponse
 from app.models.cost import CostEstimate
 from app.models.saved_query import SavedQuery
-from app.services.watsonx_service import generate_sql
+from app.services.ica_service import generate_sql as _ica_generate_sql
+from app.services.watsonx_service import generate_sql as _watsonx_generate_sql
 from app.services.schema_service import load_schema
 from app.services.execution_service import execute_query
 from app.services.insights_service import analyze_results
@@ -219,15 +220,17 @@ class QueryService:
         self, query: str, user_id: str, context: dict, schema: Optional[SchemaContext]
     ) -> LLMResult:
         """
-        Calls the watsonx service with schema-aware prompting.
-        Returns an LLMResult with `sql` and `explanation` fields.
+        Routes the NL→SQL request to ICA (when ICA_MOCK=False) or falls back
+        to watsonx. ICA takes priority when its key is active.
         """
         llm_request = LLMRequest(
             natural_language_query=query,
             user_id=user_id,
             context=context,
         )
-        return await generate_sql(llm_request, schema=schema)
+        if not settings.ICA_MOCK:
+            return await _ica_generate_sql(llm_request, schema=schema)
+        return await _watsonx_generate_sql(llm_request, schema=schema)
 
     async def _execute_query(self, sql: str) -> QueryResult:
         """
