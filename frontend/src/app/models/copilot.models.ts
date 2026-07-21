@@ -32,6 +32,8 @@ export interface SqlPreview {
   table: string;
   generatedAt: string;
   sessionId: string;
+  /** Plain-language summary of what the generated SQL does (no chain-of-thought). */
+  explanation?: string;
 }
 
 export interface QueryResult {

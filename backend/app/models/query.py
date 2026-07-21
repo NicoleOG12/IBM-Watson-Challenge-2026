@@ -1,10 +1,11 @@
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional
+from typing import List, Optional
 from datetime import datetime, timezone
 import uuid
 
 from app.models.anomaly import AnomalyRules
 from app.models.cost import CostEstimate
+from app.models.saved_query import SavedQuery
 
 
 class QueryRequest(BaseModel):
@@ -77,6 +78,14 @@ class QueryResponse(BaseModel):
     cost_estimate: Optional[CostEstimate] = Field(
         default=None,
         description="Formula-based cost estimate for the generated SQL (informational only)",
+    )
+    next_steps: List[str] = Field(
+        default_factory=list,
+        description="LLM-generated follow-up question suggestions",
+    )
+    matched_query: Optional[SavedQuery] = Field(
+        default=None,
+        description="Existing saved query that matched the user's question (above similarity threshold)",
     )
     status: str = "pending"
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

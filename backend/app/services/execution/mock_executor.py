@@ -76,14 +76,18 @@ class MockExecutor(QueryExecutor):
                 extra={"rows": len(rows), "time_ms": round(elapsed_ms, 1)},
             )
 
+            # Populate realistic metadata using the cost formula
+            from app.services.cost_service import estimate_cost
+            cost_est = estimate_cost(sql)
+
             return ExecutionResult(
                 columns=columns,
                 rows=rows,
                 execution_time_ms=elapsed_ms,
                 rows_returned=len(rows),
-                data_scanned_bytes=0,
-                estimated_cost_usd=0.0,
-                execution_mode="mock",
+                data_scanned_bytes=cost_est.bytes_scanned,
+                estimated_cost_usd=cost_est.estimated_cost_usd,
+                execution_mode="mock-sqlite",
             )
 
         except sqlite3.OperationalError as exc:

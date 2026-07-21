@@ -1,83 +1,96 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { delay, of, Observable } from 'rxjs';
+import { delay, map, of, Observable } from 'rxjs';
 import { SavedQuestion } from '../models/copilot.models';
 
 // ─────────────────────────────────────────────────────────────
 // QuestionsService
 //
-// PARA ALTERNAR ENTRE MOCK E REAL:
-//   → Mock  : bloco `of(MOCK_*).pipe(delay(ms))`  ← ATIVO
-//   → Real  : descomente `this.http.*` e comente o bloco MOCK
+// getSaved()    → GET /api/queries/saved?user_id=
+// getSuggested()→ stays mock (no backend endpoint yet)
+// getSimilar()  → GET /api/queries/match?q=&user_id=
+// save()        → POST /api/queries/save
 // ─────────────────────────────────────────────────────────────
 
 const API = '/api';
+const DEMO_USER = 'alex.rodrigues@acme.com';
+
+// Backend SavedQuery shape → frontend SavedQuestion shape
+interface BackendSavedQuery {
+  id:          string;
+  user_id:     string;
+  question:    string;
+  sql:         string;
+  tables_used: string[];
+  tags:        string[];
+  description: string | null;
+  auto_saved:  boolean;
+}
+
+function toSavedQuestion(b: BackendSavedQuery): SavedQuestion {
+  return {
+    id:        b.id,
+    question:  b.question,
+    sql:       b.sql,
+    tags:      b.tags,
+    intent:    b.description ?? '',
+    validated: true,
+  };
+}
 
 @Injectable({ providedIn: 'root' })
 export class QuestionsService {
-  // REAL → descomente:
-  // private http = inject(HttpClient);
+  private http = inject(HttpClient);
 
-  // ── GET /api/questions/saved?userId= ────────────────────
-  // Resposta: SavedQuestion[]
-  // --------------------------------------------------------
-  getSaved(userId: string): Observable<SavedQuestion[]> {
-    // ── MOCK ────────────────────────────────────────────────
-    return of(MOCK_SAVED).pipe(delay(400));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.get<SavedQuestion[]>(`${API}/questions/saved`, {
-    //   params: { userId },
-    // });
+  // ── GET /api/queries/saved?user_id= ─────────────────────
+  getSaved(userId: string = DEMO_USER): Observable<SavedQuestion[]> {
+    return this.http.get<BackendSavedQuery[]>(`${API}/queries/saved`, {
+      params: { user_id: userId },
+    }).pipe(map(list => list.map(toSavedQuestion)));
+    // ── MOCK (fallback) ─────────────────────────────────────
+    // return of(MOCK_SAVED).pipe(delay(400));
   }
 
-  // ── GET /api/questions/suggested?userId= ────────────────
-  // Chips de pergunta rápida exibidos abaixo do chat
-  // Resposta: string[]
-  // --------------------------------------------------------
+  // ── stays mock — no backend endpoint yet ─────────────────
   getSuggested(userId: string): Observable<string[]> {
-    // ── MOCK ────────────────────────────────────────────────
     return of(MOCK_SUGGESTED).pipe(delay(300));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.get<string[]>(`${API}/questions/suggested`, {
-    //   params: { userId },
-    // });
   }
 
-  // ── GET /api/questions/saved?similar=true&intent= ───────
-  // Resposta: SavedQuestion[] — perguntas similares no catálogo
-  // --------------------------------------------------------
+  // ── GET /api/queries/match?q=&user_id= ───────────────────
+  // Returns matching saved queries by keyword overlap
   getSimilar(intent: string): Observable<SavedQuestion[]> {
-    // ── MOCK ────────────────────────────────────────────────
-    return of(MOCK_SAVED).pipe(delay(400));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.get<SavedQuestion[]>(`${API}/questions/saved`, {
-    //   params: { similar: 'true', intent },
-    // });
+    return this.http.get<BackendSavedQuery[]>(`${API}/queries/match`, {
+      params: { q: intent, user_id: DEMO_USER },
+    }).pipe(map(list => list.map(toSavedQuestion)));
+    // ── MOCK (fallback) ─────────────────────────────────────
+    // return of(MOCK_SAVED).pipe(delay(400));
   }
 
-  // ── POST /api/questions/save ─────────────────────────────
-  // Corpo: { question: string; sql: string; insights: string; tags: string[] }
-  // Resposta: SavedQuestion
-  // --------------------------------------------------------
+  // ── POST /api/queries/save ───────────────────────────────
   save(payload: Partial<SavedQuestion>): Observable<SavedQuestion> {
-    // ── MOCK ────────────────────────────────────────────────
-    return of({ ...MOCK_SAVED[0], ...payload } as SavedQuestion).pipe(delay(300));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.post<SavedQuestion>(`${API}/questions/save`, payload);
+    return this.http.post<BackendSavedQuery>(`${API}/queries/save`, {
+      user_id:     DEMO_USER,
+      question:    payload.question ?? '',
+      sql:         payload.sql ?? '',
+      tags:        payload.tags ?? [],
+      description: payload.intent ?? null,
+    }).pipe(map(toSavedQuestion));
+    // ── MOCK (fallback) ─────────────────────────────────────
+    // return of({ ...MOCK_SAVED[0], ...payload } as SavedQuestion).pipe(delay(300));
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  MOCK DATA
+//  MOCK DATA — kept as reference / fallback
 // ─────────────────────────────────────────────────────────────
 
 const MOCK_SAVED: SavedQuestion[] = [
   {
-    id: 'q1',
-    question: 'Variação de vendas por produto',
-    sql: 'SELECT product_name, ...',
-    tags: ['Sales Analytics'],
-    intent: 'sales_drop',
+    id:        'q1',
+    question:  'Variação de vendas por produto',
+    sql:       'SELECT product_name, ...',
+    tags:      ['Sales Analytics'],
+    intent:    'sales_drop',
     validated: true,
   },
 ];

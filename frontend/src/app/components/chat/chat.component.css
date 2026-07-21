@@ -964,3 +964,109 @@
   background: rgba(6,95,70,0.10);
   border-color: rgba(6,95,70,0.30);
 }
+
+/* ══════════════════════════════
+   SQL EDITOR (inline editable textarea)
+══════════════════════════════ */
+.sql-editor {
+  width: 100%;
+  background: #080c18;
+  color: #a8ff78;
+  border-radius: 10px;
+  padding: 16px 18px 16px 24px;
+  font-size: 12.5px; line-height: 1.85;
+  font-family: "JetBrains Mono", "Cascadia Code", monospace;
+  border: 1px solid rgba(79,158,255,0.5);
+  box-shadow: 0 0 0 3px rgba(79,158,255,0.12), 0 0 40px rgba(0,0,0,0.5);
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+.sql-editor:focus {
+  border-color: rgba(79,158,255,0.8);
+  box-shadow: 0 0 0 4px rgba(79,158,255,0.18), 0 0 40px rgba(0,0,0,0.5);
+}
+:host-context([data-theme="light"]) .sql-editor {
+  background: #1a1f2e;
+  color: #a8ff78;
+  border-color: rgba(18,70,176,0.55);
+}
+
+/* ══════════════════════════════
+   READ-ONLY BLOCK — bloqueio de queries destrutivas
+══════════════════════════════ */
+.sql-readonly-block {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: rgba(255,82,82,0.07);
+  border: 1px solid rgba(255,82,82,0.35);
+  border-left: 4px solid #ff5252;
+  border-radius: 8px;
+}
+.readonly-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.readonly-text {
+  display: flex; flex-direction: column; gap: 3px;
+  font-size: 13px; line-height: 1.5;
+}
+.readonly-text strong { color: #ff5252; font-size: 13.5px; }
+.readonly-text span   { color: rgba(255,200,200,0.7); font-size: 12px; }
+:host-context([data-theme="light"]) .sql-readonly-block {
+  background: rgba(220,38,38,0.07);
+  border-color: rgba(220,38,38,0.35);
+  border-left-color: #dc2626;
+}
+:host-context([data-theme="light"]) .readonly-text strong { color: #dc2626; }
+:host-context([data-theme="light"]) .readonly-text span   { color: #7f1d1d; }
+
+/* ══════════════════════════════
+   SQL EXPLANATION — resumo sem chain-of-thought
+══════════════════════════════ */
+.sql-explanation {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(79,158,255,0.05);
+  border: 1px solid rgba(79,158,255,0.18);
+  border-left: 3px solid #4f9eff;
+  border-radius: 8px;
+}
+.explanation-label {
+  display: block;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.7px;
+  text-transform: uppercase; color: #4f9eff; margin-bottom: 6px;
+}
+.explanation-text {
+  margin: 0; font-size: 13px; line-height: 1.7;
+  color: #b8c4e0;
+}
+:host-context([data-theme="light"]) .sql-explanation {
+  background: rgba(37,99,235,0.06);
+  border-color: rgba(37,99,235,0.22);
+  border-left-color: #2563eb;
+}
+:host-context([data-theme="light"]) .explanation-label { color: #2563eb; }
+:host-context([data-theme="light"]) .explanation-text  { color: #1e293b; }
+
+/* ══════════════════════════════
+   INTEGRATE BUTTON
+══════════════════════════════ */
+.btn-integrate {
+  background: rgba(0,229,255,0.06);
+  border-color: rgba(0,229,255,0.3);
+  color: #00e5ff;
+}
+.btn-integrate:hover {
+  background: rgba(0,229,255,0.14);
+  border-color: #00e5ff;
+  color: #fff;
+}
+:host-context([data-theme="light"]) .btn-integrate {
+  background: rgba(7,89,133,0.08);
+  border-color: rgba(7,89,133,0.35);
+  color: #075985;
+}
+:host-context([data-theme="light"]) .btn-integrate:hover {
+  background: rgba(7,89,133,0.16);
+  border-color: #075985;
+  color: #023e6e;
+}

@@ -142,7 +142,7 @@ class TestExecuteQuery:
     @pytest.mark.asyncio
     async def test_execution_mode_is_mock(self):
         result = await _run("SELECT * FROM sales")
-        assert result.execution_mode == "mock"
+        assert result.execution_mode == "mock-sqlite"
 
     @pytest.mark.asyncio
     async def test_row_count_matches_rows(self):
@@ -194,7 +194,7 @@ class TestExecuteQuery:
     async def test_metadata_populated(self):
         result = await _run("SELECT * FROM sales LIMIT 1")
         assert result.metadata is not None
-        assert result.metadata.execution_mode == "mock"
+        assert result.metadata.execution_mode == "mock-sqlite"
         assert result.metadata.execution_time_ms >= 0
 
 
@@ -224,7 +224,7 @@ class TestPluggableConnector:
         """With no custom connector and USE_ATHENA=False the factory returns MockExecutor."""
         monkeypatch.setattr(svc, "_custom_connector", None)
         result = await svc.execute_query("SELECT * FROM sales LIMIT 1")
-        assert result.execution_mode == "mock"
+        assert result.execution_mode == "mock-sqlite"
         assert result.error is None
 
     @pytest.mark.asyncio

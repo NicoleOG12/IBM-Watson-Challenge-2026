@@ -25,7 +25,7 @@ from typing import Any
 from app.models.llm import LLMResult
 from app.models.execution import QueryResult
 from app.models.insight import InsightReport
-from app.models.response import DataPayload, FormattedResponse
+from app.models.response import DataPayload, ExecutionMetadataPayload, FormattedResponse
 
 logger = logging.getLogger(__name__)
 
@@ -61,11 +61,18 @@ def format_response(
         >>> resp.sql
         'SELECT 1'
     """
+    meta = query_result.metadata
     data = DataPayload(
         columns=query_result.columns,
         rows=query_result.rows,
         row_count=query_result.row_count,
         execution_mode=query_result.execution_mode,
+        metadata=ExecutionMetadataPayload(
+            execution_time_ms=meta.execution_time_ms if meta else 0.0,
+            bytes_processed=meta.data_scanned_bytes if meta else 0,
+            engine=meta.execution_mode if meta else "mock-sqlite",
+            row_count=query_result.row_count,
+        ) if meta else None,
     )
 
     formatted = FormattedResponse(

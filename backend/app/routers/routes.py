@@ -8,6 +8,7 @@ Add new feature routers below as the project grows.
 from fastapi import APIRouter
 
 from app.controllers.audit_controller import router as audit_router
+from app.controllers.copilot_controller import router as copilot_router
 from app.controllers.cost_controller import router as cost_router
 from app.controllers.docs_controller import router as docs_router
 from app.controllers.memory_controller import router as memory_router
@@ -24,3 +25,4 @@ api_router.include_router(cost_router)
 api_router.include_router(sql_router)
 api_router.include_router(saved_queries_router)
 api_router.include_router(docs_router)
+api_router.include_router(copilot_router)

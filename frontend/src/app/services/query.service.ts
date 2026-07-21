@@ -1,77 +1,86 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { delay, of, Observable } from 'rxjs';
+import { delay, map, of, Observable } from 'rxjs';
 import { QueryResult, HistoryEntry } from '../models/copilot.models';
+import { CopilotStateService } from './copilot-state.service';
 
 // ─────────────────────────────────────────────────────────────
 // QueryService
 //
-// PARA ALTERNAR ENTRE MOCK E REAL:
-//   → Mock  : bloco `of(MOCK_*).pipe(delay(ms))`  ← ATIVO
-//   → Real  : descomente `this.http.*` e comente o bloco MOCK
+// execute()    → resolves from CopilotStateService cache
+//               (the backend already ran the query inside ask())
+// getHistory() → GET /api/memory/{userId}
+// cancel()     → stays mock (no cancel endpoint on the backend)
 // ─────────────────────────────────────────────────────────────
 
 const API = '/api';
+const DEMO_USER = 'alex.rodrigues@acme.com';
 
 @Injectable({ providedIn: 'root' })
 export class QueryService {
-  // REAL → descomente:
-  // private http = inject(HttpClient);
+  private http  = inject(HttpClient);
+  private state = inject(CopilotStateService);
 
-  // ── POST /api/query/execute ──────────────────────────────
-  // Corpo: { sessionId: string; sql: string; engine: 'bigquery'|'redshift' }
-  // Resposta: QueryResult
+  // ── Resolves from cached BackendQueryResponse ────────────
+  // The backend already executed the query inside POST /query.
+  // We read the result from the state cache and map it to the
+  // QueryResult shape the chat component expects.
   // --------------------------------------------------------
   execute(sessionId: string, sql: string): Observable<QueryResult> {
-    // ── MOCK ────────────────────────────────────────────────
+    const cached = this.state.lastResponse();
+    if (cached?.result) {
+      const d = cached.result.data;
+      const meta = d.metadata;
+      return of<QueryResult>({
+        executionId: cached.query_id,
+        rowCount:    d.row_count,
+        durationMs:  meta?.execution_time_ms ?? 0,
+        columns:     d.columns,
+        rows:        d.rows,
+        hasMore:     false,
+      });
+    }
+    // ── MOCK fallback when no cached response ───────────────
     return of(MOCK_RESULT).pipe(delay(2300));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.post<QueryResult>(`${API}/query/execute`, {
-    //   sessionId,
-    //   sql,
-    //   engine: 'bigquery',
-    // });
   }
 
-  // ── GET /api/query/results/:executionId ─────────────────
-  // Query params opcionais: ?format=csv&page=1&pageSize=50
-  // Resposta: QueryResult (paginado)
+  // ── GET /api/memory/{userId} ─────────────────────────────
+  // Maps UserMemory.interactions to HistoryEntry[]
   // --------------------------------------------------------
-  getResults(executionId: string, format?: 'json' | 'csv'): Observable<QueryResult> {
-    // ── MOCK ────────────────────────────────────────────────
-    return of(MOCK_RESULT).pipe(delay(300));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.get<QueryResult>(`${API}/query/results/${executionId}`, {
-    //   params: format ? { format } : {},
-    // });
+  getHistory(userId: string = DEMO_USER, limit = 50): Observable<HistoryEntry[]> {
+    return this.http.get<{ interactions: Array<{
+      query:     string;
+      sql:       string;
+      timestamp: string;
+      status:    string;
+      row_count: number;
+    }> }>(`${API}/memory/${userId}`).pipe(
+      map(mem => (mem.interactions ?? []).slice(-limit).reverse().map((i, idx) => ({
+        executionId: `hist_${idx}`,
+        question:    i.query,
+        engine:      'bigquery' as const,
+        rowCount:    i.row_count ?? 0,
+        durationMs:  0,
+        timestamp:   new Date(i.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      }))),
+    );
+    // ── MOCK (fallback) ─────────────────────────────────────
+    // return of(MOCK_HISTORY).pipe(delay(400));
   }
 
-  // ── DELETE /api/query/cancel/:sessionId ─────────────────
-  // Resposta: { cancelled: boolean }
-  // --------------------------------------------------------
+  // ── Stays mock — no cancel endpoint on the backend ───────
   cancel(sessionId: string): Observable<{ cancelled: boolean }> {
-    // ── MOCK ────────────────────────────────────────────────
     return of({ cancelled: true }).pipe(delay(200));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.delete<{ cancelled: boolean }>(`${API}/query/cancel/${sessionId}`);
   }
 
-  // ── GET /api/queries/history ────────────────────────────
-  // Query params: ?userId=&limit=50
-  // Resposta: HistoryEntry[]
-  // --------------------------------------------------------
-  getHistory(userId: string, limit = 50): Observable<HistoryEntry[]> {
-    // ── MOCK ────────────────────────────────────────────────
-    return of(MOCK_HISTORY).pipe(delay(400));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.get<HistoryEntry[]>(`${API}/queries/history`, {
-    //   params: { userId, limit: String(limit) },
-    // });
+  // ── GET /api/query/results/:executionId — not implemented ─
+  getResults(executionId: string): Observable<QueryResult> {
+    return of(MOCK_RESULT).pipe(delay(300));
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  MOCK DATA
+//  MOCK DATA — kept as reference / fallback
 // ─────────────────────────────────────────────────────────────
 
 export const MOCK_RESULT: QueryResult = {
@@ -80,13 +89,13 @@ export const MOCK_RESULT: QueryResult = {
   durationMs: 2300,
   columns: ['product_name', 'q2_revenue', 'q3_revenue', 'pct_change'],
   rows: [
-    { product_name: 'Notebook Pro X15',    q2_revenue: 842000, q3_revenue: 506000, pct_change: -39.9 },
+    { product_name: 'Notebook Pro X15',      q2_revenue: 842000, q3_revenue: 506000, pct_change: -39.9 },
     { product_name: 'Monitor UltraWide 34"', q2_revenue: 621500, q3_revenue: 414200, pct_change: -33.3 },
-    { product_name: 'Headset Gamer RGB',   q2_revenue: 310000, q3_revenue: 217000, pct_change: -30.0 },
-    { product_name: 'Teclado Mecânico Pro', q2_revenue: 198000, q3_revenue: 140000, pct_change: -29.3 },
-    { product_name: 'Webcam 4K Ultra',     q2_revenue: 155000, q3_revenue: 112000, pct_change: -27.7 },
+    { product_name: 'Headset Gamer RGB',     q2_revenue: 310000, q3_revenue: 217000, pct_change: -30.0 },
+    { product_name: 'Teclado Mecânico Pro',  q2_revenue: 198000, q3_revenue: 140000, pct_change: -29.3 },
+    { product_name: 'Webcam 4K Ultra',       q2_revenue: 155000, q3_revenue: 112000, pct_change: -27.7 },
   ],
-  hasMore: true,
+  hasMore: false,
 };
 
 const MOCK_HISTORY: HistoryEntry[] = [

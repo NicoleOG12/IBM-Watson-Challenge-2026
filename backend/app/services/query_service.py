@@ -29,6 +29,7 @@ from app.models.execution import QueryResult
 from app.models.insight import InsightReport
 from app.models.response import FormattedResponse
 from app.models.cost import CostEstimate
+from app.models.saved_query import SavedQuery
 from app.services.watsonx_service import generate_sql
 from app.services.schema_service import load_schema
 from app.services.execution_service import execute_query
@@ -38,6 +39,8 @@ from app.services.memory_service import get_context, save_interaction
 from app.services.audit_service import record_query
 from app.services.cost_service import estimate_cost
 from app.services.saved_queries_service import auto_save
+from app.services.query_matching_service import find_matching_query
+from app.services.next_steps_service import generate_next_steps
 from app.security.sql_validator import validate_sql
 from app.config import get_settings
 
@@ -68,10 +71,27 @@ class QueryService:
         # Step 3: Load schema context
         schema = self._load_schema_context()
 
-        # Step 4: NL → SQL via watsonx (schema-aware)
-        llm_result: LLMResult = await self._translate_to_sql(
-            sanitised_query, request.user_id, context, schema
+        # Step 3.5: Check saved queries for a keyword match (skip LLM if found)
+        matched: Optional[SavedQuery] = find_matching_query(
+            sanitised_query, user_id=request.user_id
         )
+        if matched:
+            logger.info(
+                "Reusing matched saved query",
+                extra={"query_id": query_id, "saved_id": matched.id},
+            )
+            llm_result = LLMResult(
+                sql=matched.sql,
+                explanation=f"Reusing saved query: '{matched.question}'",
+            )
+        else:
+            matched = None
+
+        # Step 4: NL → SQL via watsonx (schema-aware, skipped when match found)
+        if not matched:
+            llm_result: LLMResult = await self._translate_to_sql(
+                sanitised_query, request.user_id, context, schema
+            )
 
         # Step 5: Validate generated SQL
         validation = validate_sql(llm_result.sql)
@@ -121,10 +141,17 @@ class QueryService:
             iqr_multiplier=iqr_multiplier,
         )
 
-        # Step 9: Format response
+        # Step 9: Generate next steps
+        next_steps = await generate_next_steps(
+            question=sanitised_query,
+            insights=insights,
+            rows_sample=query_result.rows[:3],
+        )
+
+        # Step 10: Format response
         formatted: FormattedResponse = self._format_result(query_result, llm_result, insights)
 
-        # Step 10: Persist interaction to memory + auto-save approved query
+        # Step 11: Persist interaction to memory + auto-save approved query
         save_interaction(
             request.user_id,
             sanitised_query,
@@ -138,7 +165,7 @@ class QueryService:
             sql=llm_result.sql,
         )
 
-        # Step 11: Emit audit record
+        # Step 12: Emit audit record
         elapsed_ms = (time.perf_counter() - _start) * 1000
         record_query(
             user_id=request.user_id,
@@ -155,6 +182,8 @@ class QueryService:
             natural_language_query=request.natural_language_query,
             result=formatted.model_dump(),
             cost_estimate=cost,
+            next_steps=next_steps,
+            matched_query=matched,
             status="success",
             timestamp=datetime.now(timezone.utc),
         )
