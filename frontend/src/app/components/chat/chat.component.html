@@ -60,15 +60,36 @@
         </div>
         <div class="card-body">
 
-          <!-- bloco SQL -->
-          <pre class="sql-block" role="region" aria-label="Código SQL gerado"><code>{{ p.sql }}</code></pre>
+          <!-- bloco SQL — modo leitura ou modo edição -->
+          <ng-container *ngIf="editingSqlMsgId !== msg.id; else sqlEditor">
+            <pre class="sql-block" role="region" aria-label="Código SQL gerado"><code>{{ p.sql }}</code></pre>
+          </ng-container>
+          <ng-template #sqlEditor>
+            <textarea
+              class="sql-editor"
+              rows="10"
+              [(ngModel)]="editedSqlDraft"
+              aria-label="Editor de SQL — edite a consulta manualmente"
+              spellcheck="false">
+            </textarea>
+          </ng-template>
 
-          <!-- validação -->
+          <!-- validação / bloqueio de escrita -->
           <div class="sql-safe" *ngIf="p.validation.safe" role="status" aria-live="polite">
             <span aria-hidden="true">✓</span> Nenhuma operação destrutiva detectada (sem DELETE / DROP / TRUNCATE)
           </div>
-          <div class="sql-unsafe" *ngIf="!p.validation.safe" role="alert">
-            <span aria-hidden="true">⚠</span> Atenção: {{ p.validation.warnings.join(', ') }}
+          <div class="sql-readonly-block" *ngIf="!p.validation.safe" role="alert" aria-live="assertive">
+            <span class="readonly-icon" aria-hidden="true">🔒</span>
+            <div class="readonly-text">
+              <strong>Apenas queries de leitura são permitidas.</strong>
+              <span>Esta consulta contém operações não permitidas: {{ p.validation.warnings.join(', ') }}</span>
+            </div>
+          </div>
+
+          <!-- explicação do que foi feito (sem chain-of-thought) -->
+          <div class="sql-explanation" *ngIf="p.explanation" role="note" aria-label="Explicação da consulta gerada">
+            <span class="explanation-label" aria-hidden="true">O que foi feito</span>
+            <p class="explanation-text">{{ p.explanation }}</p>
           </div>
 
           <!-- estimativa de custo -->
@@ -91,15 +112,34 @@
           <div class="action-row" style="margin-top:10px;" role="group" aria-label="Ações da consulta">
             <button class="btn btn-primary" type="button"
                     (click)="executeQuery()"
-                    [disabled]="flowState() === 'executing'"
+                    [disabled]="flowState() === 'executing' || !p.validation.safe"
                     [attr.aria-busy]="flowState() === 'executing'"
                     aria-describedby="sql-exec-hint">
               {{ flowState() === 'executing' ? '⏳ Executando...' : '▶ Executar consulta' }}
             </button>
             <span id="sql-exec-hint" class="sr-only">Executa a consulta SQL no banco de dados selecionado</span>
-            <button class="btn btn-secondary" type="button" aria-label="Editar o SQL manualmente">
-              ✎ Editar SQL
-            </button>
+
+            <!-- Editar SQL: alterna entre abrir editor e confirmar edição -->
+            <ng-container *ngIf="editingSqlMsgId !== msg.id; else confirmEditBtn">
+              <button class="btn btn-secondary" type="button"
+                      (click)="toggleEditSql(msg.id, p.sql)"
+                      aria-label="Editar o SQL manualmente">
+                ✎ Editar SQL
+              </button>
+            </ng-container>
+            <ng-template #confirmEditBtn>
+              <button class="btn btn-primary" type="button"
+                      (click)="confirmEditSql(msg.id)"
+                      aria-label="Confirmar edição do SQL">
+                ✔ Confirmar SQL
+              </button>
+              <button class="btn btn-secondary" type="button"
+                      (click)="toggleEditSql(msg.id, p.sql)"
+                      aria-label="Cancelar edição do SQL">
+                ✕ Descartar
+              </button>
+            </ng-template>
+
             <button class="btn btn-danger" type="button" (click)="cancelQuery()" aria-label="Cancelar a consulta em andamento">
               ✕ Cancelar
             </button>
@@ -202,6 +242,11 @@
                 <button class="btn btn-ghost" type="button" (click)="triggerAction('jira_ticket')">+ Criar tarefa no Jira</button>
                 <button class="btn btn-ghost" type="button" (click)="triggerAction('send_email')">✉ Enviar por e-mail</button>
                 <button class="btn btn-ghost" type="button" (click)="saveQuestion()">★ Salvar pergunta</button>
+                <button class="btn btn-integrate" type="button"
+                        (click)="integrateWithClientDb()"
+                        aria-label="Integrar resultados com o banco de dados do cliente">
+                  ⛁ Integrar com banco do cliente
+                </button>
               </div>
             </div>
           </div>

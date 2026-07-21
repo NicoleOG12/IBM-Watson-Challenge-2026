@@ -73,6 +73,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   inputText  = '';
   chips      = SUGGESTED_CHIPS;
 
+  // ── SQL inline editing state ──────────────────────────────
+  editingSqlMsgId = '';   // id of the message whose SQL is being edited
+  editedSqlDraft  = '';   // draft text while the editor is open
+
   // armazena contexto entre steps do fluxo
   private currentSessionId  = '';
   private currentExecutionId = '';
@@ -121,6 +125,41 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       this.addResultMessage(result);
       this.generateInsights(result.executionId);
     });
+  }
+
+  // ── Toggle SQL inline editor ─────────────────────────────
+  toggleEditSql(msgId: string, currentSql: string): void {
+    if (this.editingSqlMsgId === msgId) {
+      // close without saving
+      this.editingSqlMsgId = '';
+      this.editedSqlDraft  = '';
+    } else {
+      this.editingSqlMsgId = msgId;
+      this.editedSqlDraft  = currentSql;
+    }
+  }
+
+  // ── Confirma edição manual do SQL ────────────────────────
+  confirmEditSql(msgId: string): void {
+    const newSql = this.editedSqlDraft.trim();
+    if (!newSql) return;
+    this.currentSql = newSql;
+    // Patch the sqlPreview.sql in the message list
+    this.messages.update(msgs =>
+      msgs.map(m =>
+        m.id === msgId && m.sqlPreview
+          ? { ...m, sqlPreview: { ...m.sqlPreview, sql: newSql } }
+          : m,
+      ),
+    );
+    this.editingSqlMsgId = '';
+    this.editedSqlDraft  = '';
+  }
+
+  // ── Integrar com banco do cliente ────────────────────────
+  integrateWithClientDb(): void {
+    // REAL → POST /api/integrations/connect { executionId }
+    this.addBobMessage('Solicitação de integração enviada. Nossa equipe entrará em contato para configurar o acesso ao banco de dados do cliente.');
   }
 
   // ── Cancela sessão ───────────────────────────────────────

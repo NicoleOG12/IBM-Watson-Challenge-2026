@@ -102,6 +102,7 @@ export const MOCK_SQL_PREVIEW: SqlPreview = {
   generatedAt: '09:15:22',
   table:       'acme-prod.sales.transactions',
   validation:  { safe: true, warnings: [] },
+  explanation: 'A consulta filtra as transações de 2024 nos trimestres Q2 e Q3, calcula a receita total por produto em cada período e retorna os 50 produtos com maior queda percentual de receita entre Q2 e Q3 (somente quedas superiores a 20%).',
   cost:        MOCK_COST,
   sql: `WITH quarterly_sales AS (
   SELECT
