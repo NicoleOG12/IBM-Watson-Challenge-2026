@@ -61,7 +61,7 @@ export class QueryService {
         engine:      'bigquery' as const,
         rowCount:    i.row_count ?? 0,
         durationMs:  0,
-        timestamp:   new Date(i.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        timestamp:   new Date(i.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
       }))),
     );
     // ── MOCK (fallback) ─────────────────────────────────────
@@ -92,14 +92,14 @@ export const MOCK_RESULT: QueryResult = {
     { product_name: 'Notebook Pro X15',      q2_revenue: 842000, q3_revenue: 506000, pct_change: -39.9 },
     { product_name: 'Monitor UltraWide 34"', q2_revenue: 621500, q3_revenue: 414200, pct_change: -33.3 },
     { product_name: 'Headset Gamer RGB',     q2_revenue: 310000, q3_revenue: 217000, pct_change: -30.0 },
-    { product_name: 'Teclado Mecânico Pro',  q2_revenue: 198000, q3_revenue: 140000, pct_change: -29.3 },
+    { product_name: 'Mechanical Keyboard Pro', q2_revenue: 198000, q3_revenue: 140000, pct_change: -29.3 },
     { product_name: 'Webcam 4K Ultra',       q2_revenue: 155000, q3_revenue: 112000, pct_change: -27.7 },
   ],
   hasMore: false,
 };
 
 const MOCK_HISTORY: HistoryEntry[] = [
-  { executionId: 'exec_7b2c', question: 'Queda de vendas Q3 vs Q2 por produto', engine: 'bigquery', rowCount: 8,  durationMs: 2300, timestamp: '09:16' },
-  { executionId: 'exec_6a1d', question: 'Top 10 clientes por receita',           engine: 'bigquery', rowCount: 10, durationMs: 1800, timestamp: 'ontem' },
-  { executionId: 'exec_5c9e', question: 'Churn rate do último mês',              engine: 'redshift', rowCount: 1,  durationMs: 900,  timestamp: 'seg' },
+  { executionId: 'exec_7b2c', question: 'Sales drop Q3 vs Q2 by product', engine: 'bigquery', rowCount: 8,  durationMs: 2300, timestamp: '09:16' },
+  { executionId: 'exec_6a1d', question: 'Top 10 customers by revenue',    engine: 'bigquery', rowCount: 10, durationMs: 1800, timestamp: 'yesterday' },
+  { executionId: 'exec_5c9e', question: 'Churn rate last month',          engine: 'redshift', rowCount: 1,  durationMs: 900,  timestamp: 'Mon' },
 ];

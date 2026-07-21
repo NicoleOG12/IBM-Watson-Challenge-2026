@@ -26,6 +26,7 @@ export interface BackendQueryResponse {
   result?: {
     sql:         string;
     explanation: string;
+    error?:      string;
     data: {
       columns:        string[];
       rows:           Record<string, unknown>[];

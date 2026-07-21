@@ -26,7 +26,7 @@ type PanelTab = 'catalog' | 'history' | 'audit';
               <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 4v4.25l3 1.75-.5.87-3.5-2.03V5h1z"/>
             </svg>
           </div>
-          Contexto
+          Context
         </div>
         <div class="panel-header-right">
           <div class="panel-status-dot"></div>
@@ -38,23 +38,23 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       <div class="tab-row">
         <button class="tab" [class.active]="activeTab === 'catalog'" (click)="activeTab = 'catalog'">
           <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10"><path d="M1 3h14v2H1zm0 4h14v2H1zm0 4h14v2H1z"/></svg>
-          Catálogo
+          Catalog
         </button>
         <button class="tab" [class.active]="activeTab === 'history'" (click)="setTab('history')">
           <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 4v4.25l3 1.75-.5.87-3.5-2.03V5h1z"/></svg>
-          Histórico
+          History
         </button>
         <button class="tab" [class.active]="activeTab === 'audit'" (click)="setTab('audit')">
           <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10"><path d="M2 1h9l3 3v11H2V1zm5 5H4v1h3zm6 0H8v1h5zm-6 3H4v1h3zm6 0H8v1h5z"/></svg>
-          Auditoria
+          Audit
         </button>
         <div class="tab-slider" [style.left]="tabSliderLeft"></div>
       </div>
 
-      <!-- ══ CATÁLOGO ══ -->
+      <!-- ══ CATALOG ══ -->
       <div class="tab-content" *ngIf="activeTab === 'catalog'">
         <div class="section-header">
-          <span class="section-label">Tabelas identificadas</span>
+          <span class="section-label">Identified tables</span>
           <span class="section-count">{{ tables.length }}</span>
         </div>
 
@@ -72,27 +72,27 @@ type PanelTab = 'catalog' | 'history' | 'audit';
           </div>
           <div class="ct-more" *ngIf="t.totalColumns > t.columns.length">
             <svg viewBox="0 0 16 16" fill="currentColor" width="9" height="9"><path d="M8 1v14M1 8h14"/></svg>
-            {{ t.totalColumns - t.columns.length }} mais colunas
+            {{ t.totalColumns - t.columns.length }} more columns
           </div>
         </div>
 
         <div class="section-header" style="margin-top:14px;">
-          <span class="section-label">Pergunta similar</span>
+          <span class="section-label">Similar question</span>
         </div>
         <div class="saved-q" *ngFor="let q of savedQuestions">
           <div class="sq-title">{{ q.question }}</div>
-          <div class="sq-meta">SQL validado · análise de queda/crescimento por SKU</div>
+          <div class="sq-meta">Validated SQL · drop/growth analysis by SKU</div>
           <div class="sq-tags">
-            <span class="stag green" *ngIf="q.validated">✓ Validado</span>
+            <span class="stag green" *ngIf="q.validated">✓ Validated</span>
             <span class="stag blue" *ngFor="let tag of q.tags">{{ tag }}</span>
           </div>
         </div>
       </div>
 
-      <!-- ══ HISTÓRICO ══ -->
+      <!-- ══ HISTORY ══ -->
       <div class="tab-content" *ngIf="activeTab === 'history'">
         <div class="section-header">
-          <span class="section-label">Últimas consultas</span>
+          <span class="section-label">Recent queries</span>
           <span class="section-count">{{ history.length }}</span>
         </div>
         <div class="history-item" *ngFor="let h of history; let i = index">
@@ -101,7 +101,7 @@ type PanelTab = 'catalog' | 'history' | 'audit';
             <div class="hi-q">{{ h.question }}</div>
             <div class="hi-meta">
               <span class="hi-db">{{ h.engine }}</span>
-              <span class="hi-stat">{{ h.rowCount }} linhas</span>
+              <span class="hi-stat">{{ h.rowCount }} rows</span>
               <span class="hi-stat">{{ h.durationMs }}ms</span>
             </div>
           </div>
@@ -109,14 +109,14 @@ type PanelTab = 'catalog' | 'history' | 'audit';
         </div>
         <div class="empty-state" *ngIf="history.length === 0">
           <div class="empty-icon">⏱</div>
-          <div>Nenhum histórico ainda.</div>
+          <div>No history yet.</div>
         </div>
       </div>
 
-      <!-- ══ AUDITORIA ══ -->
+      <!-- ══ AUDIT ══ -->
       <div class="tab-content" *ngIf="activeTab === 'audit'">
         <div class="section-header">
-          <span class="section-label">Log da sessão</span>
+          <span class="section-label">Session log</span>
           <span class="section-count audit-live">● LIVE</span>
         </div>
         <div class="audit-entry" *ngFor="let a of auditLog">
@@ -132,7 +132,7 @@ type PanelTab = 'catalog' | 'history' | 'audit';
         </div>
         <div class="empty-state" *ngIf="auditLog.length === 0">
           <div class="empty-icon">📋</div>
-          <div>Sem entradas de auditoria.</div>
+          <div>No audit entries.</div>
         </div>
       </div>
     </aside>

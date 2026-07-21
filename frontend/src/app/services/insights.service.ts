@@ -43,16 +43,16 @@ export const MOCK_INSIGHTS: Insight[] = [
   {
     type: 'warning',
     icon: '⚠',
-    text: 'Notebook Pro X15 apresentou a maior queda (−39,9%). Coincide com o lançamento do concorrente ModelX em agosto/2024. Recomenda-se análise de precificação.',
+    text: 'Notebook Pro X15 showed the largest drop (−39.9%). This coincides with the launch of competitor ModelX in August 2024. A pricing analysis is recommended.',
   },
   {
     type: 'info',
     icon: 'ℹ',
-    text: 'Os 3 produtos com maior queda pertencem à categoria Periféricos Premium, sugerindo tendência de categoria, não apenas produtos isolados.',
+    text: 'The 3 products with the largest drops belong to the Premium Peripherals category, suggesting a category trend rather than isolated products.',
   },
   {
     type: 'positive',
     icon: '↑',
-    text: 'Apesar das quedas, o volume de unidades vendidas dos produtos afetados cresceu 8% — queda de receita pode ser explicada por promoções agressivas no Q3.',
+    text: 'Despite the revenue drops, unit sales volume for the affected products grew 8% — the revenue decline may be explained by aggressive Q3 promotions.',
   },
 ];

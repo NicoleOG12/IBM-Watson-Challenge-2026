@@ -9,24 +9,14 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="status-bar" role="contentinfo" aria-label="Barra de status do sistema">
+    <div class="status-bar" role="contentinfo" aria-label="System status bar">
 
-      <!-- Left: connections -->
+      <!-- Left: API status only -->
       <div class="sb-left">
-        <div class="status-chip green" role="status" aria-label="BigQuery: conectado, 12 milissegundos">
-          <span class="chip-dot" aria-hidden="true"></span>
-          BigQuery
-          <span class="chip-detail" aria-hidden="true">12ms</span>
-        </div>
         <div class="status-chip cyan" role="status" aria-label="Bob API: online">
           <span class="chip-dot" aria-hidden="true"></span>
           Bob API
           <span class="chip-detail" aria-hidden="true">online</span>
-        </div>
-        <div class="status-chip amber" role="status" aria-label="Redshift: em espera">
-          <span class="chip-dot" aria-hidden="true"></span>
-          Redshift
-          <span class="chip-detail" aria-hidden="true">stand-by</span>
         </div>
         <div class="sb-vsep" aria-hidden="true"></div>
         <div class="mini-bar-wrap" aria-hidden="true">
@@ -41,14 +31,12 @@ import { CommonModule } from '@angular/common';
       <div class="sb-center">
         <span class="path-seg" aria-hidden="true">acme-corp-prod</span>
         <span class="path-arrow" aria-hidden="true">›</span>
-        <span class="path-seg" aria-hidden="true">bigquery</span>
-        <span class="path-arrow" aria-hidden="true">›</span>
         <span class="path-seg active" aria-hidden="true">analytics_v2</span>
       </div>
 
       <!-- Right: session -->
       <div class="sb-right">
-        <span class="info-pill session" aria-label="Sessão: sess_9f3a">
+        <span class="info-pill session" aria-label="Session: sess_9f3a">
           <svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
             <rect x="1" y="4" width="14" height="10" rx="1"/>
             <path d="M5 4V3a3 3 0 016 0v1"/>
@@ -56,9 +44,7 @@ import { CommonModule } from '@angular/common';
           sess_9f3a
         </span>
         <span class="sb-vsep" aria-hidden="true"></span>
-        <span class="info-user" aria-label="Usuário: alex.rodrigues@acme.com">alex.rodrigues&#64;acme.com</span>
-        <span class="sb-vsep" aria-hidden="true"></span>
-        <time class="info-time" [attr.datetime]="time" aria-live="off" aria-label="Horário atual: {{ time }}">{{ time }}</time>
+        <span class="info-user" aria-label="User: alex.rodrigues@acme.com">alex.rodrigues&#64;acme.com</span>
       </div>
     </div>
   `,
@@ -238,39 +224,20 @@ import { CommonModule } from '@angular/common';
       font-size: 10px;
     }
     :host-context([data-theme="light"]) .info-user { color: #111827; }
-    .info-time {
-      color: #00e5ff;
-      font-variant-numeric: tabular-nums;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-    }
-    :host-context([data-theme="light"]) .info-time { color: #075985; }
   `],
 })
 export class StatusBarComponent implements OnInit, OnDestroy {
-  time = '';
   bars: number[] = [3, 6, 4, 9, 5, 8, 3, 11, 4, 7, 5, 10, 3, 8, 4];
 
-  private timeInterval?: ReturnType<typeof setInterval>;
   private barsInterval?: ReturnType<typeof setInterval>;
 
   ngOnInit(): void {
-    this.updateTime();
-    this.timeInterval = setInterval(() => this.updateTime(), 1000);
     this.barsInterval = setInterval(() => {
       this.bars = this.bars.map(() => Math.floor(Math.random() * 10) + 2);
     }, 450);
   }
 
   ngOnDestroy(): void {
-    clearInterval(this.timeInterval);
     clearInterval(this.barsInterval);
-  }
-
-  private updateTime(): void {
-    this.time = new Date().toLocaleTimeString('pt-BR', {
-      hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
   }
 }

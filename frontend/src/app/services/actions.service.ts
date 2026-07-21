@@ -31,7 +31,7 @@ export class ActionsService {
   // --------------------------------------------------------
   trigger(actionType: ActionType, executionId: string): Observable<ActionResult> {
     // ── MOCK ────────────────────────────────────────────────
-    return of({ triggered: true, externalId: 'JIRA-1234', message: 'Ação executada com sucesso (mock).' }).pipe(delay(600));
+    return of({ triggered: true, externalId: 'JIRA-1234', message: 'Action executed successfully (mock).' }).pipe(delay(600));
     // ── REAL → descomente abaixo e comente o bloco MOCK ────
     // return this.http.post<ActionResult>(`${API}/actions/trigger`, {
     //   actionType,

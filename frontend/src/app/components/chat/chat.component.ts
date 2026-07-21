@@ -39,11 +39,11 @@ import type {
 //  REAL: GET /api/questions/suggested?userId=
 // ─────────────────────────────────────────────────────────
 const SUGGESTED_CHIPS = [
-  'Top 10 clientes por receita',
-  'Ticket médio por canal',
-  'Churn rate do mês',
-  'Estoque crítico',
-  'Inadimplência atual',
+  'Top 10 customers by revenue',
+  'Average ticket by channel',
+  'Churn rate this month',
+  'Critical stock levels',
+  'Current delinquency rate',
 ];
 
 // Estado do fluxo de execução por sessão
@@ -88,7 +88,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       id: 'greeting',
       role: 'bob',
       time: this.now(),
-      text: 'Olá! Sou o <strong>Bob</strong>, seu copiloto corporativo de dados. Faça uma pergunta em linguagem natural e eu cuido do resto — identifico as tabelas, gero o SQL, estimo o custo, executo e analiso os resultados.',
+      text: 'Hello! I\'m <strong>Bob</strong>, your corporate data copilot. Ask a question in plain language and I\'ll handle the rest — identify the tables, generate the SQL, estimate the cost, execute, and analyse the results.',
     }]);
 
     // ── MOCK: chips estáticos acima ──────────────────────────
@@ -115,13 +115,13 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     if (this.flowState() !== 'preview') return;
     this.flowState.set('executing');
 
-    // ── Atualiza passo de execução para 'active' ──────────
-    this.updateStepStatus('Aguardando execução', 'active');
+    // ── Update execution step to 'active' ─────────────────
+    this.updateStepStatus('Awaiting execution', 'active');
 
     // ── POST /api/query/execute { sessionId, sql, engine } ──
     this.querySvc.execute(this.currentSessionId, this.currentSql).subscribe(result => {
       this.currentExecutionId = result.executionId;
-      this.updateStepStatus('Aguardando execução', 'done');
+      this.updateStepStatus('Awaiting execution', 'done');
       this.addResultMessage(result);
       this.generateInsights(result.executionId);
     });
@@ -159,7 +159,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // ── Integrar com banco do cliente ────────────────────────
   integrateWithClientDb(): void {
     // REAL → POST /api/integrations/connect { executionId }
-    this.addBobMessage('Solicitação de integração enviada. Nossa equipe entrará em contato para configurar o acesso ao banco de dados do cliente.');
+    this.addBobMessage('Integration request sent. Our team will be in touch to configure access to the client database.');
   }
 
   // ── Cancela sessão ───────────────────────────────────────
@@ -167,7 +167,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     // ── DELETE /api/query/cancel/:sessionId ─────────────────
     this.querySvc.cancel(this.currentSessionId).subscribe(() => {
       this.flowState.set('idle');
-      this.addBobMessage('Consulta cancelada. Você pode fazer uma nova pergunta.');
+      this.addBobMessage('Query cancelled. You can ask a new question.');
     });
   }
 
@@ -176,11 +176,11 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     // ── POST /api/outputs/generate { type, executionId } ─────
     this.outputsSvc.generate(type, this.currentExecutionId).subscribe(out => {
       const labels: Record<OutputType, string> = {
-        executive_summary: 'Resumo Executivo',
+        executive_summary: 'Executive Summary',
         dashboard: 'Dashboard',
-        logbook: 'Diário de Bordo',
+        logbook: 'Logbook',
       };
-      this.addBobMessage(`<strong>${labels[type]}</strong> gerado com sucesso. <a href="${out.url}" target="_blank">Abrir ↗</a>`);
+      this.addBobMessage(`<strong>${labels[type]}</strong> generated successfully. <a href="${out.url}" target="_blank">Open ↗</a>`);
     });
   }
 
@@ -196,12 +196,12 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   saveQuestion(): void {
     // ── POST /api/questions/save { question, sql, tags } ─────
     this.questionsSvc.save({
-      question: 'Queda de vendas Q3 vs Q2',
+      question: 'Sales drop Q3 vs Q2',
       sql: this.currentSql,
       tags: ['Sales Analytics'],
       validated: true,
     }).subscribe(() => {
-      this.addBobMessage('Pergunta salva no repositório de perguntas prontas. ✓');
+      this.addBobMessage('Question saved to the saved questions repository. ✓');
     });
   }
 
@@ -219,23 +219,28 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     this.flowState.set('thinking');
 
     // ── STEP 1: POST /api/copilot/ask ─────────────────────
-    this.copilotSvc.ask(question).subscribe(({ sessionId }) => {
-      this.currentSessionId = sessionId;
+    this.copilotSvc.ask(question).subscribe({
+      next: ({ sessionId }) => {
+        this.currentSessionId = sessionId;
 
-      // ── STEP 2: POST /api/copilot/interpret ────────────
-      this.copilotSvc.interpret(question).subscribe(steps => {
-        this.addStepsMessage(steps);
+        // ── STEP 2: POST /api/copilot/interpret ──────────
+        this.copilotSvc.interpret(question).subscribe(steps => {
+          this.addStepsMessage(steps);
 
-        // ── STEP 3+4+5: POST /api/sql/generate ─────────────
-        this.sqlSvc.generate(question).subscribe(preview => {
-          this.currentSql = preview.sql;
-          this.addSqlPreviewMessage(preview);
-          this.flowState.set('preview');
-
-          // ── STEP 6: GET /api/copilot/next-steps (pré-carrega) ─
-          // (será exibido após execução)
+          // ── STEP 3+4+5: POST /api/sql/generate ─────────
+          this.sqlSvc.generate(question).subscribe(preview => {
+            this.currentSql = preview.sql;
+            this.addSqlPreviewMessage(preview);
+            this.flowState.set('preview');
+          });
         });
-      });
+      },
+      error: (err: Error) => {
+        this.flowState.set('idle');
+        this.addBobMessage(
+          `🔒 <strong>Operation not permitted.</strong><br>${err.message}`
+        );
+      },
     });
   }
 
@@ -302,7 +307,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   formatCell(value: unknown, col: string): string {
     if (value == null) return '—';
     if (col.includes('revenue') || col.includes('cost')) {
-      return 'R$ ' + Number(value).toLocaleString('pt-BR');
+      return '$ ' + Number(value).toLocaleString('en-US');
     }
     if (col === 'pct_change') {
       const n = Number(value);
@@ -320,7 +325,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   }
 
   private now(): string {
-    return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   }
 
   private uid(): string {
