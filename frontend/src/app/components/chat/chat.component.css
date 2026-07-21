@@ -292,7 +292,7 @@
 }
 /* Indicator de tipo "editor" no topo */
 .sql-block::after {
-  content: 'SQL  ●  BigQuery';
+  content: 'SQL  ●  AWS';
   position: absolute; top: 8px; right: 14px;
   font-size: 9px; color: rgba(255,255,255,0.2);
   letter-spacing: 1px; text-transform: uppercase;

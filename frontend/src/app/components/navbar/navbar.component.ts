@@ -557,7 +557,7 @@ import { ThemeService } from '../../services/theme.service';
   `]
 })
 export class NavbarComponent implements OnInit, OnDestroy {
-  engine      = input<DbEngine>('bigquery');
+  engine      = input<DbEngine>('aws');
   sidebarOpen = input<boolean>(false);
   menuToggle  = output<void>();
 

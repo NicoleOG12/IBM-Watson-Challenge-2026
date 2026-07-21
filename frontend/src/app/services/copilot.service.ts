@@ -4,6 +4,8 @@ import { delay, map, of, tap, Observable } from 'rxjs';
 import { PipelineStep } from '../models/copilot.models';
 import { CopilotStateService, BackendQueryResponse } from './copilot-state.service';
 
+const API = '/api';
+
 // ─────────────────────────────────────────────────────────────
 // CopilotService
 //
@@ -12,10 +14,8 @@ import { CopilotStateService, BackendQueryResponse } from './copilot-state.servi
 //                  CopilotStateService for downstream steps.
 // interpret()    → stays mock (no dedicated NLU endpoint;
 //                  pipeline steps are synthesised from the response)
-// getNextSteps() → GET /api/copilot/next-steps?execution_id=
+// getNextSteps() → reads from CopilotStateService cache
 // ─────────────────────────────────────────────────────────────
-
-const API = '/api';
 
 // Hard-coded user for demo — replace with real auth session
 const DEMO_USER = 'alex.rodrigues@acme.com';
@@ -62,18 +62,22 @@ export class CopilotService {
     // return this.http.post<PipelineStep[]>(`${API}/copilot/interpret`, { question });
   }
 
-  // ── GET /api/copilot/next-steps?execution_id= ────────────
-  // Returns LLM-generated follow-up question suggestions.
-  // Falls back to mock when the backend endpoint is not yet live.
+  // ── Read next steps from cached BackendQueryResponse ─────
+  // The backend computes next steps inside POST /query.
+  // We read them from the state cache to avoid a second API call
+  // that would run rule-based suggestions instead of the cached ones.
   // --------------------------------------------------------
   getNextSteps(executionId: string): Observable<string[]> {
+    const cached = this.state.lastResponse();
+    if (cached?.next_steps && cached.next_steps.length > 0) {
+      return of(cached.next_steps);
+    }
+    // ── Fallback: fetch from API when cache is empty ────────
     return this.http.get<{ next_steps: string[] }>(`${API}/copilot/next-steps`, {
       params: { execution_id: executionId },
     }).pipe(
       map(r => r.next_steps ?? []),
     );
-    // ── MOCK (fallback) ─────────────────────────────────────
-    // return of(MOCK_NEXT_STEPS).pipe(delay(600));
   }
 }
 
@@ -82,11 +86,11 @@ export class CopilotService {
 // ─────────────────────────────────────────────────────────────
 
 const MOCK_PIPELINE_STEPS: PipelineStep[] = [
-  { label: 'NLU Interpretation',  status: 'done',   endpoint: 'POST /api/query' },
-  { label: 'Catalog resolved',    status: 'done',   endpoint: 'GET /api/catalog/resolve' },
-  { label: 'SQL generated',       status: 'done',   endpoint: 'POST /api/query' },
-  { label: 'Cost estimated',      status: 'warn',   endpoint: 'POST /api/cost/estimate' },
-  { label: 'Awaiting execution',  status: 'active', endpoint: 'POST /api/query' },
+  { label: 'NLU Interpretation',        status: 'done',   endpoint: 'POST /api/query' },
+  { label: 'Catalog resolved',          status: 'done',   endpoint: 'GET /api/catalog/resolve' },
+  { label: 'SQL generated via ICA',     status: 'done',   endpoint: 'POST /api/query' },
+  { label: 'Cost estimated',            status: 'warn',   endpoint: 'POST /api/cost/estimate' },
+  { label: 'Awaiting execution',        status: 'active', endpoint: 'POST /api/query' },
 ];
 
 const MOCK_NEXT_STEPS: string[] = [

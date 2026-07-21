@@ -39,7 +39,7 @@ export class SqlService {
           bytesScanned:  cost ? `~${(cost.bytes_scanned / 1e9).toFixed(1)} GB` : '—',
           estimatedCost: cost ? `$${cost.estimated_cost_usd.toFixed(4)}` : '—',
           table:         'mock-sqlite',
-          engine:        'bigquery',
+          engine:        'aws',
         },
       };
       return of(preview);
@@ -73,7 +73,7 @@ export class SqlService {
         bytesScanned:  `~${(r.bytes_scanned / 1e9).toFixed(1)} GB`,
         estimatedCost: `$${r.estimated_cost_usd.toFixed(4)}`,
         table:         `${r.table_count} table(s)`,
-        engine:        'bigquery' as const,
+        engine:        'aws' as const,
       })),
     );
     // ── MOCK (fallback) ─────────────────────────────────────
@@ -94,7 +94,7 @@ const MOCK_COST: CostEstimate = {
   bytesScanned:  '~4.7 GB',
   estimatedCost: '$0.023',
   table:         'acme-prod.sales.transactions',
-  engine:        'bigquery',
+  engine:        'aws',
 };
 
 export const MOCK_SQL_PREVIEW: SqlPreview = {

@@ -59,7 +59,7 @@ export const MOCK_TABLES: CatalogTable[] = [
   {
     id: 'acme-prod.sales.transactions',
     fullName: 'acme-prod.sales.transactions',
-    engine: 'bigquery',
+    engine: 'aws',
     totalColumns: 19,
     columns: [
       { name: 'product_id',   type: 'STRING'  },
@@ -72,7 +72,7 @@ export const MOCK_TABLES: CatalogTable[] = [
   {
     id: 'acme-prod.products.catalog',
     fullName: 'acme-prod.products.catalog',
-    engine: 'bigquery',
+    engine: 'aws',
     totalColumns: 11,
     columns: [
       { name: 'product_id', type: 'STRING'  },
