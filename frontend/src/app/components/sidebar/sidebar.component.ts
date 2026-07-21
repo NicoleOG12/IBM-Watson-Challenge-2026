@@ -36,15 +36,15 @@ interface NavEntry {
     { provide: LUCIDE_ICONS, multi: true, useValue: new LucideIconProvider({ BotMessageSquare, Database, History, Star, LayoutDashboard, FileText, NotebookText, Settings }) },
   ],
   template: `
-    <aside class="sidebar" role="navigation" aria-label="Menu principal">
+    <aside class="sidebar" role="navigation" aria-label="Main menu">
 
-      <!-- Decorativo — oculto de leitores de tela -->
+      <!-- Decorative — hidden from screen readers -->
       <div class="sb-accent-line" aria-hidden="true"></div>
 
-      <!-- ── NAVEGAÇÃO ── -->
+      <!-- ── NAVIGATION ── -->
       <div class="sb-scroll">
-        <nav aria-label="Navegação">
-          <div class="sb-section-label" id="nav-nav">Navegação</div>
+        <nav aria-label="Navigation">
+          <div class="sb-section-label" id="nav-nav">Navigation</div>
           <div class="sb-items" role="list" aria-labelledby="nav-nav">
             <button *ngFor="let item of navItems"
                  type="button"
@@ -53,7 +53,7 @@ interface NavEntry {
                  [class.active]="active === item.id"
                  [attr.data-color]="item.color"
                  [attr.aria-current]="active === item.id ? 'page' : null"
-                 [attr.aria-label]="item.label + (item.badge ? ', ' + item.badge + ' itens' : '') + (item.live ? ', ao vivo' : '')"
+                 [attr.aria-label]="item.label + (item.badge ? ', ' + item.badge + ' items' : '') + (item.live ? ', live' : '')"
                  (click)="navigate(item.id)">
               <div class="sb-item-icon" [class]="'ic-' + item.color" aria-hidden="true">
                 <lucide-icon [name]="item.icon" [size]="15" [strokeWidth]="1.75"></lucide-icon>
@@ -94,8 +94,8 @@ interface NavEntry {
 
         <div class="sb-divider" aria-hidden="true"></div>
 
-        <nav aria-label="Sistema">
-          <div class="sb-section-label" id="nav-system">Sistema</div>
+        <nav aria-label="System">
+          <div class="sb-section-label" id="nav-system">System</div>
           <div class="sb-items" role="list" aria-labelledby="nav-system">
             <button *ngFor="let item of systemItems"
                  type="button"
@@ -115,27 +115,6 @@ interface NavEntry {
         </nav>
       </div>
 
-      <!-- ── FOOTER: Conexões ── -->
-      <div class="sb-footer" role="status" aria-label="Status das conexões de banco de dados">
-        <div class="sb-footer-title" aria-hidden="true">Conexões</div>
-        <div class="conn-list">
-          <div class="conn-row green" aria-label="BigQuery: conectado, latência 12 milissegundos">
-            <div class="conn-led" aria-hidden="true"></div>
-            <span class="conn-name">BigQuery</span>
-            <span class="conn-ms" aria-hidden="true">12ms</span>
-          </div>
-          <div class="conn-row green" aria-label="Redshift: conectado, latência 38 milissegundos">
-            <div class="conn-led" aria-hidden="true"></div>
-            <span class="conn-name">Redshift</span>
-            <span class="conn-ms" aria-hidden="true">38ms</span>
-          </div>
-          <div class="conn-row amber" aria-label="S3: em espera">
-            <div class="conn-led" aria-hidden="true"></div>
-            <span class="conn-name">S3</span>
-            <span class="conn-ms" aria-hidden="true">stand-by</span>
-          </div>
-        </div>
-      </div>
     </aside>
   `,
   styles: [`
@@ -403,20 +382,20 @@ export class SidebarComponent {
   navTo = output<NavItem>();
 
   navItems: NavEntry[] = [
-    { id: 'chat',            label: 'Chat com Bob',      color: 'blue',   live: true,  icon: 'bot-message-square' },
-    { id: 'catalog',         label: 'Catálogo de Dados', color: 'cyan',               icon: 'database' },
-    { id: 'history',         label: 'Histórico',         color: 'purple', badge: '12', icon: 'history' },
-    { id: 'saved-questions', label: 'Perguntas Prontas', color: 'amber',  badge: '5',  icon: 'star' },
+    { id: 'chat',            label: 'Chat with Bob',  color: 'blue',   live: true,  icon: 'bot-message-square' },
+    { id: 'catalog',         label: 'Data Catalog',   color: 'cyan',               icon: 'database' },
+    { id: 'history',         label: 'History',        color: 'purple', badge: '12', icon: 'history' },
+    { id: 'saved-questions', label: 'Saved Questions', color: 'amber', badge: '5',  icon: 'star' },
   ];
 
   outputItems: NavEntry[] = [
-    { id: 'dashboards', label: 'Dashboards',      color: 'green', badge: '3', icon: 'layout-dashboard' },
-    { id: 'reports',    label: 'Relatórios',       color: 'blue',             icon: 'file-text' },
-    { id: 'logs',       label: 'Diário de Bordo',  color: 'pink',             icon: 'notebook-text' },
+    { id: 'dashboards', label: 'Dashboards', color: 'green', badge: '3', icon: 'layout-dashboard' },
+    { id: 'reports',    label: 'Reports',    color: 'blue',              icon: 'file-text' },
+    { id: 'logs',       label: 'Logbook',    color: 'pink',              icon: 'notebook-text' },
   ];
 
   systemItems: NavEntry[] = [
-    { id: 'settings', label: 'Configurações', color: 'purple', icon: 'settings' },
+    { id: 'settings', label: 'Settings', color: 'purple', icon: 'settings' },
   ];
 
   navigate(item: NavItem): void {

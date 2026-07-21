@@ -87,7 +87,7 @@ export class QuestionsService {
 const MOCK_SAVED: SavedQuestion[] = [
   {
     id:        'q1',
-    question:  'Variação de vendas por produto',
+    question:  'Sales variation by product',
     sql:       'SELECT product_name, ...',
     tags:      ['Sales Analytics'],
     intent:    'sales_drop',
@@ -96,9 +96,9 @@ const MOCK_SAVED: SavedQuestion[] = [
 ];
 
 const MOCK_SUGGESTED: string[] = [
-  'Top 10 clientes por receita',
-  'Ticket médio por canal',
-  'Churn rate do mês',
-  'Estoque crítico',
-  'Inadimplência atual',
+  'Top 10 customers by revenue',
+  'Average ticket by channel',
+  'Churn rate this month',
+  'Critical stock levels',
+  'Current delinquency rate',
 ];

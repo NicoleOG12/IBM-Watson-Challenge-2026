@@ -11,78 +11,78 @@
 <!-- ── MAIN SHELL ── -->
 <div class="shell">
 
-  <!-- Overlay escuro para fechar sidebar no mobile -->
+  <!-- Dark overlay to close sidebar on mobile -->
   <div class="sidebar-overlay"
        [class.visible]="sidebarOpen()"
        (click)="closeSidebar()"
        aria-hidden="true"></div>
 
-  <!-- Sidebar — drawer no mobile, fixo em desktop -->
+  <!-- Sidebar — drawer on mobile, fixed on desktop -->
   <app-sidebar
     [class.drawer-open]="sidebarOpen()"
     (navTo)="onNavChange($event)" />
 
-  <!-- Conteúdo principal -->
+  <!-- Main content -->
   <main class="main-content">
     <!-- CHAT -->
     <app-chat *ngIf="activeNav() === 'chat'" />
 
-    <!-- Placeholder outras rotas -->
+    <!-- Placeholder other routes -->
     <div class="placeholder" *ngIf="activeNav() !== 'chat'">
-      <!-- Grade animada de fundo -->
+      <!-- Animated background grid -->
       <div class="ph-grid" aria-hidden="true"></div>
-      <!-- Glows decorativos -->
+      <!-- Decorative glows -->
       <div class="ph-glow ph-glow-1" aria-hidden="true"></div>
       <div class="ph-glow ph-glow-2" aria-hidden="true"></div>
 
-      <div class="placeholder-inner" role="status" [attr.aria-label]="'Módulo ' + activeNav() + ' em desenvolvimento'">
-        <!-- Anel orbital animado -->
+      <div class="placeholder-inner" role="status" [attr.aria-label]="'Module ' + activeNav() + ' under development'">
+        <!-- Animated orbital ring -->
         <div class="ph-orbit" aria-hidden="true">
           <div class="ph-orbit-ring ph-ring-1"></div>
           <div class="ph-orbit-ring ph-ring-2"></div>
           <div class="ph-orbit-ring ph-ring-3"></div>
           <div class="ph-orbit-dot"></div>
         </div>
-        <!-- Tag de módulo -->
-        <div class="ph-module-tag" aria-hidden="true">MÓDULO</div>
-        <!-- Nome da rota -->
+        <!-- Module tag -->
+        <div class="ph-module-tag" aria-hidden="true">MODULE</div>
+        <!-- Route name -->
         <div class="ph-title">{{ activeNav() | uppercase }}</div>
-        <!-- Barra de progresso fake -->
+        <!-- Fake progress bar -->
         <div class="ph-progress-bar" aria-hidden="true">
           <div class="ph-progress-fill"></div>
         </div>
-        <div class="ph-progress-label" aria-hidden="true">AGUARDANDO IMPLEMENTAÇÃO</div>
-        <!-- Descrição -->
+        <div class="ph-progress-label" aria-hidden="true">AWAITING IMPLEMENTATION</div>
+        <!-- Description -->
         <div class="ph-desc">
-          Módulo em construção. O endpoint e o componente<br>correspondente serão conectados em breve.
+          Module under construction. The endpoint and corresponding<br>component will be connected soon.
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Right panel — só em wide desktop -->
+  <!-- Right panel — wide desktop only -->
   <app-right-panel class="right-panel-wrap" />
 </div>
 
-<!-- ── STATUS BAR (oculta em mobile) ── -->
+<!-- ── STATUS BAR (hidden on mobile) ── -->
 <app-status-bar class="status-bar-wrap" />
 
-<!-- ── BOTTOM NAV (só mobile) ── -->
-<nav class="bottom-nav" aria-label="Navegação mobile">
+<!-- ── BOTTOM NAV (mobile only) ── -->
+<nav class="bottom-nav" aria-label="Mobile navigation">
   <button class="bn-item" [class.active]="activeNav() === 'chat'"
-          (click)="onNavChange('chat')" aria-label="Chat com Bob" type="button">
+          (click)="onNavChange('chat')" aria-label="Chat with Bob" type="button">
     <lucide-icon name="bot-message-square" [size]="22" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
     <span>Chat</span>
   </button>
   <button class="bn-item" [class.active]="activeNav() === 'catalog'"
-          (click)="onNavChange('catalog')" aria-label="Catálogo" type="button">
+          (click)="onNavChange('catalog')" aria-label="Catalog" type="button">
     <lucide-icon name="database" [size]="22" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
-    <span>Catálogo</span>
+    <span>Catalog</span>
   </button>
   <button class="bn-item" [class.active]="activeNav() === 'history'"
-          (click)="onNavChange('history')" aria-label="Histórico" type="button">
+          (click)="onNavChange('history')" aria-label="History" type="button">
     <lucide-icon name="history" [size]="22" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
-    <span>Histórico</span>
+    <span>History</span>
   </button>
   <button class="bn-item" (click)="toggleSidebar()"
           [class.active]="sidebarOpen()" aria-label="Menu" type="button">

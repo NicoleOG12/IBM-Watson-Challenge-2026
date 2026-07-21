@@ -84,24 +84,247 @@ def _is_safe_sql(sql: str) -> bool:
 # Mock response
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Destructive-intent detector — applied to the *natural language* question
+# before SQL generation, mirroring the LLM's system-prompt rule #3.
+# ---------------------------------------------------------------------------
+
+_DESTRUCTIVE_NL_PATTERN = re.compile(
+    r"\b("
+    # Unambiguous DML/DDL verbs (always destructive regardless of context)
+    r"delete\b|truncate\b|"
+    # DROP only when a DB-object noun follows (within 4 words), so that
+    # "sales drop", "price drop", "revenue drop" are not flagged.
+    r"drop(?:\s+\w+){0,3}\s+(?:table|column|index|view|database|schema|procedure|trigger)\b|"
+    # INSERT when targeting a data object or using "into"
+    r"insert(?:\s+\w+){0,4}\s+(?:row|record|entry)s?\b|"
+    r"insert\s+(?:\w+\s+)?into\b|"
+    # UPDATE when targeting a specific data object
+    r"update\s+(?:(?:the|a|an|my|this)\s+)?(?:table|column|row|record|price|field|value|data)\b|"
+    # DDL verbs
+    r"alter\s+(?:\w+\s+)?(?:table|column|database|schema)\b|"
+    r"create(?:\s+\w+){0,3}\s+(?:table|column|database|schema|index|view|procedure)\b|"
+    # Plain-language destructive equivalents
+    r"remove\s+(?:(?:all|the|every|a|an)\s+)?(?:row|record|entry|data|user)s?\b|"
+    r"erase\s+(?:(?:all|the)\s+)?(?:row|record|data|table|entry)s?\b|"
+    r"wipe\s+(?:(?:the|all)\s+)?(?:database|table|data|record)s?\b|"
+    r"modify\s+(?:(?:the|a|an)\s+)?(?:table|column|row|record|data|schema)\b|"
+    r"overwrite\s+(?:(?:the|a)\s+)?(?:table|record|data)\b"
+    r")",
+    re.IGNORECASE,
+)
+
+
+def _is_destructive_intent(query: str) -> bool:
+    """
+    Return True when the natural-language query appears to request a
+    data-modification or DDL operation rather than a read-only analysis.
+    """
+    return bool(_DESTRUCTIVE_NL_PATTERN.search(query))
+
+
+# ---------------------------------------------------------------------------
+# Question-aware mock responses
+# Each entry is (keyword_list, sql, explanation).
+# The first entry whose keywords all appear (case-insensitive) in the query wins.
+# The final entry acts as the default fallback.
+# All SQL is written to run against the SQLite mock schema:
+#   sales(sale_id, region, product_id, amount, quantity, sale_date, channel)
+#   products(product_id, name, category, unit_price, cost_price, is_active)
+#   customers(customer_id, name, email, region, segment, created_at)
+#   orders(order_id, customer_id, order_date, status, total_amount)
+# ---------------------------------------------------------------------------
+
+_MOCK_SCENARIOS: list[tuple[list[str], str, str]] = [
+    # Top customers by revenue
+    (
+        ["top", "customer", "revenue"],
+        """SELECT c.name AS customer_name,
+       c.region,
+       c.segment,
+       SUM(o.total_amount) AS total_revenue
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+GROUP BY c.customer_id, c.name, c.region, c.segment
+ORDER BY total_revenue DESC
+LIMIT 10""",
+        "Returns the top 10 customers ranked by total order revenue.",
+    ),
+    # Average ticket / average order value by channel
+    (
+        ["average", "ticket", "channel"],
+        """SELECT channel,
+       ROUND(AVG(CAST(amount AS REAL)), 2) AS avg_ticket,
+       COUNT(*) AS total_sales
+FROM sales
+GROUP BY channel
+ORDER BY avg_ticket DESC""",
+        "Calculates the average sale amount (ticket) and total number of sales for each channel.",
+    ),
+    # Churn rate / churned customers
+    (
+        ["churn"],
+        """SELECT segment,
+       COUNT(*) AS total_customers,
+       SUM(CASE WHEN churned = 1 THEN 1 ELSE 0 END) AS churned_customers,
+       ROUND(100.0 * SUM(CASE WHEN churned = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) AS churn_rate_pct
+FROM (
+    SELECT c.customer_id,
+           c.segment,
+           CASE WHEN MAX(o.order_date) < DATE(julianday('now') - 90) THEN 1 ELSE 0 END AS churned
+    FROM customers c
+    LEFT JOIN orders o ON c.customer_id = o.customer_id
+    GROUP BY c.customer_id, c.segment
+) sub
+GROUP BY segment
+ORDER BY churn_rate_pct DESC""",
+        "Estimates churn rate per customer segment by flagging customers with no order in the last 90 days.",
+    ),
+    # Critical stock / low stock / inventory
+    (
+        ["stock", "critical"],
+        """SELECT p.name AS product_name,
+       p.category,
+       p.unit_price,
+       COALESCE(SUM(CAST(s.quantity AS INTEGER)), 0) AS units_sold
+FROM products p
+LEFT JOIN sales s ON p.product_id = s.product_id
+WHERE CAST(p.is_active AS TEXT) = 'True'
+GROUP BY p.product_id, p.name, p.category, p.unit_price
+HAVING units_sold > 0
+ORDER BY units_sold DESC
+LIMIT 20""",
+        "Lists active products with their total units sold, highlighting the most-moved inventory.",
+    ),
+    # Delinquency / overdue / pending payments
+    (
+        ["delinquency"],
+        """SELECT status,
+       COUNT(*) AS order_count,
+       ROUND(SUM(CAST(total_amount AS REAL)), 2) AS total_value
+FROM orders
+GROUP BY status
+ORDER BY total_value DESC""",
+        "Breaks down orders by status to surface pending and overdue payment totals.",
+    ),
+    # Sales by product / product performance
+    (
+        ["product", "sales"],
+        """SELECT p.name AS product_name,
+       p.category,
+       COUNT(s.sale_id) AS num_sales,
+       SUM(CAST(s.quantity AS INTEGER)) AS units_sold,
+       ROUND(SUM(CAST(s.amount AS REAL)), 2) AS total_revenue
+FROM sales s
+JOIN products p ON s.product_id = p.product_id
+GROUP BY p.product_id, p.name, p.category
+ORDER BY total_revenue DESC""",
+        "Shows total revenue and units sold per product, joined with product metadata.",
+    ),
+    # Sales drop / Q3 vs Q2 comparison
+    (
+        ["drop", "q3", "q2"],
+        """SELECT p.name AS product_name,
+       ROUND(SUM(CASE WHEN strftime('%m', s.sale_date) IN ('04','05','06') THEN CAST(s.amount AS REAL) ELSE 0 END), 2) AS q2_revenue,
+       ROUND(SUM(CASE WHEN strftime('%m', s.sale_date) IN ('07','08','09') THEN CAST(s.amount AS REAL) ELSE 0 END), 2) AS q3_revenue,
+       ROUND(
+           (SUM(CASE WHEN strftime('%m', s.sale_date) IN ('07','08','09') THEN CAST(s.amount AS REAL) ELSE 0 END) -
+            SUM(CASE WHEN strftime('%m', s.sale_date) IN ('04','05','06') THEN CAST(s.amount AS REAL) ELSE 0 END)) * 100.0 /
+           NULLIF(SUM(CASE WHEN strftime('%m', s.sale_date) IN ('04','05','06') THEN CAST(s.amount AS REAL) ELSE 0 END), 0),
+       1) AS pct_change
+FROM sales s
+JOIN products p ON s.product_id = p.product_id
+WHERE strftime('%Y', s.sale_date) = '2024'
+GROUP BY p.product_id, p.name
+HAVING q2_revenue > 0
+ORDER BY pct_change ASC
+LIMIT 20""",
+        "Compares Q2 vs Q3 2024 revenue per product and calculates the percentage change, ordered by largest drop.",
+    ),
+    # Sales by region
+    (
+        ["sales", "region"],
+        """SELECT region,
+       COUNT(*) AS num_sales,
+       ROUND(SUM(CAST(amount AS REAL)), 2) AS total_sales,
+       ROUND(AVG(CAST(amount AS REAL)), 2) AS avg_sale
+FROM sales
+GROUP BY region
+ORDER BY total_sales DESC""",
+        "Aggregates total and average sales by region.",
+    ),
+    # Orders by status
+    (
+        ["order", "status"],
+        """SELECT status,
+       COUNT(*) AS total_orders,
+       ROUND(SUM(CAST(total_amount AS REAL)), 2) AS total_value,
+       ROUND(AVG(CAST(total_amount AS REAL)), 2) AS avg_order_value
+FROM orders
+GROUP BY status
+ORDER BY total_orders DESC""",
+        "Summarises order counts and values grouped by order status.",
+    ),
+    # Revenue by category
+    (
+        ["category", "revenue"],
+        """SELECT p.category,
+       COUNT(s.sale_id) AS num_sales,
+       ROUND(SUM(CAST(s.amount AS REAL)), 2) AS total_revenue
+FROM sales s
+JOIN products p ON s.product_id = p.product_id
+GROUP BY p.category
+ORDER BY total_revenue DESC""",
+        "Shows total revenue and sale count broken down by product category.",
+    ),
+    # Default fallback — total sales by region
+    (
+        [],
+        """SELECT region,
+       COUNT(*) AS num_sales,
+       ROUND(SUM(CAST(amount AS REAL)), 2) AS total_sales
+FROM sales
+GROUP BY region
+ORDER BY total_sales DESC""",
+        "Aggregates total sales by region.",
+    ),
+]
+
+
 def _mock_response(query: str) -> LLMResult:
     """
-    Returns a deterministic mock LLMResult.
+    Returns a question-aware mock LLMResult.
+
+    If the natural-language query expresses destructive intent (DELETE, DROP,
+    INSERT, UPDATE, etc.), returns an empty SQL with a refusal explanation —
+    matching the behaviour that the real LLM is instructed to follow via
+    system-prompt rule #3.
+
+    Otherwise, matches the query against _MOCK_SCENARIOS by keyword presence
+    and returns the first matching SQL + explanation pair.
     Used when WATSONX_MOCK=True or when the API is unreachable.
     """
-    mock_sql = (
-        "SELECT region, SUM(amount) AS total_sales "
-        "FROM sales "
-        "WHERE sale_date >= DATE_TRUNC('quarter', NOW() - INTERVAL '3 months') "
-        "GROUP BY region "
-        "ORDER BY total_sales DESC"
-    )
+    if _is_destructive_intent(query):
+        return LLMResult(
+            sql="",
+            explanation=(
+                "I can only run read-only analytical queries. "
+                "Data modification and DDL operations (DELETE, DROP, INSERT, "
+                "UPDATE, ALTER, TRUNCATE, etc.) are not permitted."
+            ),
+        )
+
+    q_lower = query.lower()
+    for keywords, sql, explanation in _MOCK_SCENARIOS:
+        if all(kw in q_lower for kw in keywords):
+            return LLMResult(
+                sql=sql,
+                explanation=f"[MOCK] {explanation}",
+            )
+    # Should never reach here because the last scenario has empty keywords (always matches)
     return LLMResult(
-        sql=mock_sql,
-        explanation=(
-            "[MOCK] Aggregates total sales by region for the previous quarter, "
-            f"in response to: '{query}'"
-        ),
+        sql=_MOCK_SCENARIOS[-1][1],
+        explanation=f"[MOCK] {_MOCK_SCENARIOS[-1][2]}",
     )
 
 
@@ -228,6 +451,21 @@ async def generate_sql(
     if settings.WATSONX_MOCK:
         logger.info("WATSONX_MOCK=True — returning mock LLM response")
         return _mock_response(llm_request.natural_language_query)
+
+    # Guard: refuse destructive intent before sending to the real LLM
+    if _is_destructive_intent(llm_request.natural_language_query):
+        logger.info(
+            "Destructive intent detected — refusing before LLM call",
+            extra={"query": llm_request.natural_language_query},
+        )
+        return LLMResult(
+            sql="",
+            explanation=(
+                "I can only run read-only analytical queries. "
+                "Data modification and DDL operations (DELETE, DROP, INSERT, "
+                "UPDATE, ALTER, TRUNCATE, etc.) are not permitted."
+            ),
+        )
 
     prompt = build_prompt(llm_request, schema=schema)
     logger.debug(

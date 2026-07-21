@@ -37,7 +37,15 @@ export class CopilotService {
       natural_language_query: question,
     }).pipe(
       tap(response => this.state.set(response)),
-      map(response => ({ sessionId: response.query_id })),
+      map(response => {
+        if (response.status === 'rejected') {
+          const reason = response.result?.['explanation']
+            ?? response.result?.['error']
+            ?? 'This type of operation is not permitted. Only read-only analytical queries are allowed.';
+          throw new Error(reason);
+        }
+        return { sessionId: response.query_id };
+      }),
     );
     // ── MOCK (fallback) ─────────────────────────────────────
     // return of({ sessionId: 'sess_9f3a' }).pipe(delay(400));
@@ -74,16 +82,16 @@ export class CopilotService {
 // ─────────────────────────────────────────────────────────────
 
 const MOCK_PIPELINE_STEPS: PipelineStep[] = [
-  { label: 'Interpretação NLU',   status: 'done', endpoint: 'POST /api/query' },
-  { label: 'Catálogo resolvido',  status: 'done', endpoint: 'GET /api/catalog/resolve' },
-  { label: 'SQL gerado',          status: 'done', endpoint: 'POST /api/query' },
-  { label: 'Custo estimado',      status: 'warn', endpoint: 'POST /api/cost/estimate' },
-  { label: 'Aguardando execução', status: 'active', endpoint: 'POST /api/query' },
+  { label: 'NLU Interpretation',  status: 'done',   endpoint: 'POST /api/query' },
+  { label: 'Catalog resolved',    status: 'done',   endpoint: 'GET /api/catalog/resolve' },
+  { label: 'SQL generated',       status: 'done',   endpoint: 'POST /api/query' },
+  { label: 'Cost estimated',      status: 'warn',   endpoint: 'POST /api/cost/estimate' },
+  { label: 'Awaiting execution',  status: 'active', endpoint: 'POST /api/query' },
 ];
 
 const MOCK_NEXT_STEPS: string[] = [
-  'Qual foi o impacto financeiro total dessa queda no Q3?',
-  'Quais regiões foram mais afetadas?',
-  'Compare com o mesmo período do ano anterior',
-  'Mostre os produtos com maior crescimento no mesmo período',
+  'What was the total financial impact of this Q3 drop?',
+  'Which regions were most affected?',
+  'Compare with the same period last year',
+  'Show products with the highest growth in the same period',
 ];

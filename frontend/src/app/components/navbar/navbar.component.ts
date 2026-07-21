@@ -19,11 +19,11 @@ import { ThemeService } from '../../services/theme.service';
       <div class="nav-topline" aria-hidden="true"></div>
       <div class="nav-sweep"  aria-hidden="true"></div>
 
-      <!-- Hambúrguer — só mobile/tablet -->
+      <!-- Hamburger — mobile/tablet only -->
       <button class="menu-btn" type="button"
               (click)="menuToggle.emit()"
               [attr.aria-expanded]="sidebarOpen()"
-              aria-label="Abrir menu de navegação"
+              aria-label="Open navigation menu"
               aria-controls="main-sidebar">
         <span class="menu-bar" [class.open]="sidebarOpen()"></span>
       </button>
@@ -40,46 +40,39 @@ import { ThemeService } from '../../services/theme.service';
         </div>
       </div>
 
-      <!-- ═══ CENTER: 3 métricas compactas ═══ -->
-      <div class="nav-metrics" role="region" aria-label="Status do sistema">
+      <!-- ═══ CENTER: 3 compact metrics ═══ -->
+      <div class="nav-metrics" role="region" aria-label="System status">
 
-        <!-- IA Status -->
-        <div class="metric-tile" role="status" aria-label="IA ativa">
+        <!-- AI Status -->
+        <div class="metric-tile" role="status" aria-label="AI active">
           <div class="tile-icon green" aria-hidden="true">
             <span class="ai-dot"></span>
             <span class="ai-ring"></span>
           </div>
           <div class="tile-body">
-            <div class="tile-label">IA STATUS</div>
-            <div class="tile-val">ATIVA</div>
+            <div class="tile-label">AI STATUS</div>
+            <div class="tile-val">ACTIVE</div>
           </div>
           <div class="wave-bars" aria-hidden="true">
             <div class="wbar" *ngFor="let b of bars" [style.height.px]="b"></div>
           </div>
         </div>
 
-        <!-- Latência -->
-        <div class="metric-tile" role="status" [attr.aria-label]="'Latência: ' + latency + 'ms'">
+        <!-- Latency -->
+        <div class="metric-tile" role="status" [attr.aria-label]="'Latency: ' + latency + 'ms'">
           <div class="tile-body">
-            <div class="tile-label">LATÊNCIA</div>
+            <div class="tile-label">LATENCY</div>
             <div class="tile-val mono">{{ latency }}<span class="tile-unit">ms</span></div>
           </div>
         </div>
 
-        <!-- Motor -->
-        <div class="metric-tile" role="status" [attr.aria-label]="'Motor: ' + engine()">
-          <div class="tile-body">
-            <div class="tile-label">MOTOR</div>
-            <div class="tile-val">{{ engine() | uppercase }}</div>
-          </div>
-        </div>
       </div>
 
               <!-- Theme Toggle -->
         <button class="theme-toggle" type="button"
                 [class.light-active]="theme.theme() === 'light'"
                 (click)="theme.toggle()"
-                [attr.aria-label]="theme.theme() === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'"
+                [attr.aria-label]="theme.theme() === 'dark' ? 'Enable light mode' : 'Enable dark mode'"
                 [attr.aria-pressed]="theme.theme() === 'light'">
           <span class="tt-track" aria-hidden="true">
             <span class="tt-star tt-s1"></span>
@@ -124,7 +117,7 @@ import { ThemeService } from '../../services/theme.service';
 
         <!-- User pill -->
         <button class="user-pill" type="button"
-                aria-label="Menu do usuário: Alex Rodrigues, Analista Sênior"
+                aria-label="User menu: Alex Rodrigues, Senior Analyst"
                 aria-haspopup="true">
           <div class="user-avatar" aria-hidden="true">
             <span>AR</span>
@@ -132,7 +125,7 @@ import { ThemeService } from '../../services/theme.service';
           </div>
           <div class="user-info">
             <div class="user-name">Alex Rodrigues</div>
-            <div class="user-role">Analista Sênior</div>
+            <div class="user-role">Senior Analyst</div>
           </div>
         </button>
 
