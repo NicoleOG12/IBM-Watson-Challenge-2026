@@ -44,3 +44,11 @@ class SaveQueryRequest(BaseModel):
     sql: str = Field(..., description="The SQL to save")
     tags: List[str] = Field(default_factory=list, description="Optional tags")
     description: Optional[str] = Field(default=None, description="Optional description")
+
+
+class UpdateSavedQueryRequest(BaseModel):
+    """Request body for PATCH /queries/saved/{id} — all fields optional."""
+
+    tags: Optional[List[str]] = Field(default=None, description="New tags list (replaces existing)")
+    description: Optional[str] = Field(default=None, description="Updated description")
+    sql: Optional[str] = Field(default=None, description="Updated SQL string")

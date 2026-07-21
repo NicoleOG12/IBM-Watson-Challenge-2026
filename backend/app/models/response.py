@@ -2,13 +2,22 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Any, Dict, List, Optional
 
 
+class ExecutionMetadataPayload(BaseModel):
+    """Execution metadata surfaced in the API response for the frontend."""
+    execution_time_ms: float = 0.0
+    bytes_processed:   int   = 0
+    engine:            str   = "mock-sqlite"
+    row_count:         int   = 0
+
+
 class DataPayload(BaseModel):
     """The raw query execution result embedded in the formatted response."""
 
-    columns: List[str] = Field(default_factory=list)
-    rows: List[Dict[str, Any]] = Field(default_factory=list)
-    row_count: int = 0
-    execution_mode: str = "mock"
+    columns:        List[str]                          = Field(default_factory=list)
+    rows:           List[Dict[str, Any]]               = Field(default_factory=list)
+    row_count:      int                                = 0
+    execution_mode: str                                = "mock"
+    metadata:       Optional[ExecutionMetadataPayload] = None
 
 
 class FormattedResponse(BaseModel):

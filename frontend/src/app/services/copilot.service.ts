@@ -1,80 +1,89 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { delay, of, Observable } from 'rxjs';
-import { ChatMessage, Insight, PipelineStep, SqlPreview, QueryResult } from '../models/copilot.models';
+import { delay, map, of, tap, Observable } from 'rxjs';
+import { PipelineStep } from '../models/copilot.models';
+import { CopilotStateService, BackendQueryResponse } from './copilot-state.service';
 
 // ─────────────────────────────────────────────────────────────
 // CopilotService
 //
-// PARA ALTERNAR ENTRE MOCK E REAL:
-//   → Mock  : retorna `of(MOCK_DATA).pipe(delay(ms))`   ← ATIVO
-//   → Real  : descomente o bloco `return this.http.post(...)` e
-//             comente o bloco `return of(...).pipe(delay(...))`
+// ask()          → POST /api/query (full pipeline)
+//                  Caches the full BackendQueryResponse in
+//                  CopilotStateService for downstream steps.
+// interpret()    → stays mock (no dedicated NLU endpoint;
+//                  pipeline steps are synthesised from the response)
+// getNextSteps() → GET /api/copilot/next-steps?execution_id=
 // ─────────────────────────────────────────────────────────────
 
-const API = '/api';   // ← ajuste a base URL para produção (environment.ts)
+const API = '/api';
+
+// Hard-coded user for demo — replace with real auth session
+const DEMO_USER = 'alex.rodrigues@acme.com';
 
 @Injectable({ providedIn: 'root' })
 export class CopilotService {
-  // MOCK → sem injeção de HttpClient necessária
-  // REAL → descomente a linha abaixo:
-  // private http = inject(HttpClient);
+  private http  = inject(HttpClient);
+  private state = inject(CopilotStateService);
 
-  // ── POST /api/copilot/ask ────────────────────────────────
-  // Corpo: { question: string; userId: string; sessionId: string; dbEngine: 'bigquery'|'redshift' }
-  // Resposta: stream de eventos SSE ou polling de status
+  // ── POST /api/query ──────────────────────────────────────
+  // Fires the full backend pipeline (NL→SQL→Execute→Insights).
+  // Caches the response so sql.service and query.service can
+  // read SQL and results without re-calling the backend.
+  // Returns { sessionId } matching the shape the chat expects.
   // --------------------------------------------------------
   ask(question: string): Observable<{ sessionId: string }> {
-    // ── MOCK ────────────────────────────────────────────────
-    return of({ sessionId: 'sess_9f3a' }).pipe(delay(400));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.post<{ sessionId: string }>(`${API}/copilot/ask`, {
-    //   question,
-    //   userId: 'alex.rodrigues@acme.com',
-    //   sessionId: crypto.randomUUID(),
-    //   dbEngine: 'bigquery',
-    // });
+    return this.http.post<BackendQueryResponse>(`${API}/query`, {
+      user_id:                DEMO_USER,
+      natural_language_query: question,
+    }).pipe(
+      tap(response => this.state.set(response)),
+      map(response => ({ sessionId: response.query_id })),
+    );
+    // ── MOCK (fallback) ─────────────────────────────────────
+    // return of({ sessionId: 'sess_9f3a' }).pipe(delay(400));
   }
 
-  // ── POST /api/copilot/interpret ──────────────────────────
-  // Corpo: { question: string }
-  // Resposta: { intent: string; entities: Record<string, string>; confidence: number }
+  // ── Stays mock — synthesised from pipeline response ──────
+  // In the real flow, step statuses are derived from the
+  // cached BackendQueryResponse by chat.component.ts.
   // --------------------------------------------------------
   interpret(question: string): Observable<PipelineStep[]> {
     // ── MOCK ────────────────────────────────────────────────
-    return of(MOCK_PIPELINE_STEPS).pipe(delay(800));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
+    return of(MOCK_PIPELINE_STEPS).pipe(delay(100));
+    // ── REAL → POST /api/copilot/interpret (not yet implemented) ──
     // return this.http.post<PipelineStep[]>(`${API}/copilot/interpret`, { question });
   }
 
-  // ── GET /api/copilot/next-steps?executionId= ────────────
-  // Resposta: { suggestions: string[] }
+  // ── GET /api/copilot/next-steps?execution_id= ────────────
+  // Returns LLM-generated follow-up question suggestions.
+  // Falls back to mock when the backend endpoint is not yet live.
   // --------------------------------------------------------
   getNextSteps(executionId: string): Observable<string[]> {
-    // ── MOCK ────────────────────────────────────────────────
-    return of(MOCK_NEXT_STEPS).pipe(delay(600));
-    // ── REAL → descomente abaixo e comente o bloco MOCK ────
-    // return this.http.get<string[]>(`${API}/copilot/next-steps`, {
-    //   params: { executionId },
-    // });
+    return this.http.get<{ next_steps: string[] }>(`${API}/copilot/next-steps`, {
+      params: { execution_id: executionId },
+    }).pipe(
+      map(r => r.next_steps ?? []),
+    );
+    // ── MOCK (fallback) ─────────────────────────────────────
+    // return of(MOCK_NEXT_STEPS).pipe(delay(600));
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  MOCK DATA — remover quando migrar para endpoints reais
+//  MOCK DATA — kept as reference / fallback
 // ─────────────────────────────────────────────────────────────
 
 const MOCK_PIPELINE_STEPS: PipelineStep[] = [
-  { label: 'Interpretação NLU',   status: 'done', endpoint: 'POST /api/copilot/interpret' },
+  { label: 'Interpretação NLU',   status: 'done', endpoint: 'POST /api/query' },
   { label: 'Catálogo resolvido',  status: 'done', endpoint: 'GET /api/catalog/resolve' },
-  { label: 'SQL gerado',          status: 'done', endpoint: 'POST /api/sql/generate' },
-  { label: 'Custo estimado',      status: 'warn', endpoint: 'POST /api/sql/estimate-cost' },
-  { label: 'Aguardando execução', status: 'active', endpoint: 'POST /api/query/execute' },
+  { label: 'SQL gerado',          status: 'done', endpoint: 'POST /api/query' },
+  { label: 'Custo estimado',      status: 'warn', endpoint: 'POST /api/cost/estimate' },
+  { label: 'Aguardando execução', status: 'active', endpoint: 'POST /api/query' },
 ];
 
 const MOCK_NEXT_STEPS: string[] = [
   'Qual foi o impacto financeiro total dessa queda no Q3?',
-  'Quais regiões foram mais afetadas pela queda do Notebook Pro X15?',
-  'Compare com o mesmo período do ano anterior (Q3 2023 vs Q3 2024)',
+  'Quais regiões foram mais afetadas?',
+  'Compare com o mesmo período do ano anterior',
   'Mostre os produtos com maior crescimento no mesmo período',
 ];

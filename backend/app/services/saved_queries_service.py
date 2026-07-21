@@ -22,9 +22,10 @@ Public API
 
 import uuid
 import logging
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
-from app.models.saved_query import SavedQuery, SaveQueryRequest
+from app.models.saved_query import SavedQuery, SaveQueryRequest, UpdateSavedQueryRequest
 from app.services.memory_service import _extract_tables
 
 logger = logging.getLogger(__name__)
@@ -141,6 +142,45 @@ def get_saved_queries(
 
     results.sort(key=lambda q: q.created_at, reverse=True)
     return results
+
+
+def update_saved_query(
+    query_id: str,
+    request: UpdateSavedQueryRequest,
+) -> Optional[SavedQuery]:
+    """
+    Update fields of an existing saved query.
+
+    Only fields explicitly set in `request` are updated;
+    None values leave the existing field unchanged.
+
+    Args:
+        query_id: The ID of the saved query to update.
+        request:  UpdateSavedQueryRequest with optional tags, description, sql.
+
+    Returns:
+        The updated SavedQuery, or None if query_id was not found.
+    """
+    if query_id not in _SAVED:
+        return None
+
+    saved = _SAVED[query_id]
+
+    updated = saved.model_copy(update={
+        k: v for k, v in {
+            "tags":        request.tags,
+            "description": request.description,
+            "sql":         request.sql,
+        }.items() if v is not None
+    })
+
+    # Re-extract tables if SQL changed
+    if request.sql is not None:
+        updated = updated.model_copy(update={"tables_used": _extract_tables(request.sql)})
+
+    _SAVED[query_id] = updated
+    logger.info("Saved query updated", extra={"query_id": query_id})
+    return updated
 
 
 def delete_saved_query(query_id: str) -> bool:
