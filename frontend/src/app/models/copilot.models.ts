@@ -60,6 +60,7 @@ export interface CatalogTable {
   id: string;
   fullName: string;
   engine: DbEngine;
+  description?: string;
   columns: CatalogColumn[];
   totalColumns: number;
 }

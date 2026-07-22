@@ -66,6 +66,7 @@ type PanelTab = 'catalog' | 'history' | 'audit';
             </div>
             <span class="ct-engine">{{ t.engine }}</span>
           </div>
+          <div class="ct-description" *ngIf="t.description">{{ t.description }}</div>
           <div class="ct-row" *ngFor="let col of t.columns">
             <span class="ct-col">{{ col.name }}</span>
             <span class="ct-type">{{ col.type }}</span>
@@ -442,6 +443,16 @@ type PanelTab = 'catalog' | 'history' | 'audit';
       gap: 5px;
     }
     .ct-more:hover { background: rgba(79,158,255,0.05); color: #4f9eff; }
+    .ct-description {
+      padding: 4px 10px 6px;
+      font-size: 10px;
+      color: rgba(240,244,255,0.38);
+      line-height: 1.4;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    :host-context([data-theme="light"]) .ct-description {
+      color: rgba(20,30,50,0.45);
+    }
 
     /* ── Saved question ── */
     .saved-q {
