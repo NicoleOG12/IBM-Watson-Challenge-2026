@@ -1,6 +1,7 @@
 {
   "tables": [
     {
+<<<<<<< HEAD
       "table_name": "cliente_parquet",
       "description": "Cadastro completo de clientes com dados pessoais e de contato.",
       "columns": [
@@ -72,6 +73,53 @@
         { "name": "produtos", "type": "ARRAY<STRUCT>", "description": "Array de objetos de produto (ID, Nome, Descricao, Categoria, Preco_Unitario, Estoque)" },
         { "name": "clientes", "type": "ARRAY<STRUCT>", "description": "Array de objetos de cliente (ID, Nome, Sobrenome, CPF, Data_Nascimento, Cidade, Estado, Endereco, Numero, Complemento, CEP, Email, Telefone)" },
         { "name": "vendas",   "type": "ARRAY<STRUCT>", "description": "Array de objetos de venda (ID_Venda, ID_Loja, ID_Cliente, ID_Produto, Qtd, Valor_Total, Data_Venda, Nome_Cliente, Filial, Produto, Categoria, Preco_Unitario)" }
+=======
+      "table_name": "sales",
+      "description": "Records of individual product sales transactions.",
+      "columns": [
+        { "name": "sale_id",    "type": "UUID",      "description": "Unique identifier for each sale" },
+        { "name": "region",     "type": "VARCHAR",   "description": "Geographic region where the sale occurred (e.g. North, South, East, West)" },
+        { "name": "product_id", "type": "UUID",      "description": "Foreign key referencing the products table" },
+        { "name": "amount",     "type": "NUMERIC",   "description": "Total monetary value of the sale in USD" },
+        { "name": "quantity",   "type": "INTEGER",   "description": "Number of units sold" },
+        { "name": "sale_date",  "type": "TIMESTAMP", "description": "Date and time the sale was recorded" },
+        { "name": "channel",    "type": "VARCHAR",   "description": "Sales channel (online, in-store, partner)" }
+      ]
+    },
+    {
+      "table_name": "products",
+      "description": "Product catalogue with pricing and category information.",
+      "columns": [
+        { "name": "product_id",   "type": "UUID",    "description": "Unique identifier for each product" },
+        { "name": "name",         "type": "VARCHAR", "description": "Human-readable product name" },
+        { "name": "category",     "type": "VARCHAR", "description": "Product category (e.g. Electronics, Clothing, Food)" },
+        { "name": "unit_price",   "type": "NUMERIC", "description": "Standard retail price per unit in USD" },
+        { "name": "cost_price",   "type": "NUMERIC", "description": "Internal cost price per unit in USD" },
+        { "name": "is_active",    "type": "BOOLEAN", "description": "Whether the product is currently available for sale" }
+      ]
+    },
+    {
+      "table_name": "customers",
+      "description": "Registered customer accounts and their demographic data.",
+      "columns": [
+        { "name": "customer_id",  "type": "UUID",    "description": "Unique identifier for each customer" },
+        { "name": "name",         "type": "VARCHAR", "description": "Full name of the customer" },
+        { "name": "email",        "type": "VARCHAR", "description": "Customer email address (unique)" },
+        { "name": "region",       "type": "VARCHAR", "description": "Geographic region of the customer" },
+        { "name": "segment",      "type": "VARCHAR", "description": "Customer segment (enterprise, SMB, individual)" },
+        { "name": "created_at",   "type": "TIMESTAMP", "description": "Timestamp when the customer account was created" }
+      ]
+    },
+    {
+      "table_name": "orders",
+      "description": "Purchase orders linking customers to one or more sales line items.",
+      "columns": [
+        { "name": "order_id",     "type": "UUID",      "description": "Unique identifier for each order" },
+        { "name": "customer_id",  "type": "UUID",      "description": "Foreign key referencing the customers table" },
+        { "name": "order_date",   "type": "TIMESTAMP", "description": "Date and time the order was placed" },
+        { "name": "status",       "type": "VARCHAR",   "description": "Current order status (pending, processing, shipped, delivered, cancelled)" },
+        { "name": "total_amount", "type": "NUMERIC",   "description": "Sum of all line item amounts for the order in USD" }
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
       ]
     }
   ]

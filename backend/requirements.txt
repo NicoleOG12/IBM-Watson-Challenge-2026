@@ -5,8 +5,13 @@ pydantic-settings>=2.2.1
 python-dotenv>=1.0.1
 httpx>=0.27.0
 
+<<<<<<< HEAD
 # AWS (required when USE_ATHENA=True or any AWS service is used)
 boto3>=1.34.0
+=======
+# AWS Athena (optional — required only when USE_ATHENA=True)
+# boto3>=1.34.0
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
 
 # Future: LLM
 # openai>=1.30.0

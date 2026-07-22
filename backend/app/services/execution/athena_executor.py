@@ -2,12 +2,20 @@
 athena_executor.py — AWS Athena query executor.
 
 Uses boto3 to:
+<<<<<<< HEAD
   1. Optionally assume an IAM Role via STS (when AWS_ROLE_ARN is set)
   2. Start a query execution via start_query_execution()
   3. Poll GetQueryExecution until status is SUCCEEDED / FAILED / CANCELLED
   4. Fetch paginated results via GetQueryResults()
   5. Parse the header + rows into the standard ExecutionResult format
   6. Populate Athena-specific metadata:
+=======
+  1. Start a query execution via start_query_execution()
+  2. Poll GetQueryExecution until status is SUCCEEDED / FAILED / CANCELLED
+  3. Fetch paginated results via GetQueryResults()
+  4. Parse the header + rows into the standard ExecutionResult format
+  5. Populate Athena-specific metadata:
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
        - execution_time_ms  (from Athena's own statistics)
        - data_scanned_bytes (from Athena statistics)
        - estimated_cost_usd (AWS prices at $5 / TB scanned, 10 MB minimum)
@@ -16,6 +24,7 @@ If boto3 is not installed (e.g. in a dev environment) the import is deferred
 so MockExecutor still works without it.
 
 Environment variables required (via Settings):
+<<<<<<< HEAD
     AWS_REGION       — e.g. "sa-east-1"
     ATHENA_DB        — Glue Data Catalog database name  (default: db_watson)
     ATHENA_OUTPUT    — S3 output location, e.g. "s3://athena-results/query-results/"
@@ -25,6 +34,11 @@ Optional:
                        temporary credentials before creating the Athena client.
                        Not needed when running inside Lambda (role is attached
                        automatically by the execution environment).
+=======
+    AWS_REGION       — e.g. "us-east-1"
+    ATHENA_DB        — Glue Data Catalog database name
+    ATHENA_OUTPUT    — S3 output location, e.g. "s3://my-bucket/athena-results/"
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
 """
 
 import logging
@@ -53,6 +67,7 @@ def _estimate_cost(scanned_bytes: int) -> float:
     return billed * _ATHENA_PRICE_PER_BYTE
 
 
+<<<<<<< HEAD
 def _base_credentials() -> Dict[str, str]:
     """
     Return static credential kwargs for boto3 when AWS_ACCESS_KEY_ID is set.
@@ -93,10 +108,13 @@ def _assume_role_credentials(role_arn: str, region: str) -> Dict[str, str]:
     }
 
 
+=======
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
 class AthenaExecutor(QueryExecutor):
     """
     Executes SQL against AWS Athena.
 
+<<<<<<< HEAD
     IAM Role handling
     -----------------
     - Inside Lambda: the execution role (ConsulteFunction02-role-3cnsnkm) is
@@ -106,14 +124,22 @@ class AthenaExecutor(QueryExecutor):
       calls STS AssumeRole to obtain temporary credentials. Otherwise boto3
       falls back to the standard credential chain (env vars, ~/.aws, etc.).
 
+=======
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
     Constructor raises ImportError if boto3 is not installed, which
     the factory catches to fall back to MockExecutor.
 
     Args:
+<<<<<<< HEAD
         region:   AWS region (defaults to settings.AWS_REGION → "sa-east-1").
         database: Glue database name (defaults to settings.ATHENA_DB → "db_watson").
         output:   S3 output path (defaults to settings.ATHENA_OUTPUT).
         role_arn: IAM Role ARN to assume (defaults to settings.AWS_ROLE_ARN).
+=======
+        region:   AWS region (defaults to settings.AWS_REGION).
+        database: Glue database name (defaults to settings.ATHENA_DB).
+        output:   S3 output path (defaults to settings.ATHENA_OUTPUT).
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
     """
 
     def __init__(
@@ -121,7 +147,10 @@ class AthenaExecutor(QueryExecutor):
         region: Optional[str] = None,
         database: Optional[str] = None,
         output: Optional[str] = None,
+<<<<<<< HEAD
         role_arn: Optional[str] = None,
+=======
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
     ) -> None:
         try:
             import boto3  # noqa: F401 — validate availability at construction time
@@ -134,6 +163,7 @@ class AthenaExecutor(QueryExecutor):
         self.region = region or settings.AWS_REGION
         self.database = database or settings.ATHENA_DB
         self.output = output or settings.ATHENA_OUTPUT
+<<<<<<< HEAD
         self._role_arn = role_arn or settings.AWS_ROLE_ARN
 
         if not self.output:
@@ -175,6 +205,23 @@ class AthenaExecutor(QueryExecutor):
                 aws_session_token=self._creds["aws_session_token"],
             )
         return boto3.client("athena", region_name=self.region, **_base_credentials())
+=======
+
+        if not self.output:
+            raise ValueError(
+                "ATHENA_OUTPUT must be set to an S3 path, e.g. s3://my-bucket/results/"
+            )
+
+        logger.info(
+            "AthenaExecutor initialised",
+            extra={"region": self.region, "database": self.database},
+        )
+
+    def _client(self):
+        """Return a fresh boto3 Athena client (lazy — not created at __init__)."""
+        import boto3
+        return boto3.client("athena", region_name=self.region)
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
 
     async def execute(self, sql: str) -> ExecutionResult:
         """
@@ -213,7 +260,11 @@ class AthenaExecutor(QueryExecutor):
             )
 
         query_id: str = start_resp["QueryExecutionId"]
+<<<<<<< HEAD
         logger.info("AthenaExecutor: started query_id=%s", query_id)
+=======
+        logger.info("AthenaExecutor: started", extra={"query_id": query_id})
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
 
         # ----------------------------------------------------------------
         # 2. Poll until terminal state
@@ -221,7 +272,10 @@ class AthenaExecutor(QueryExecutor):
         import asyncio
 
         deadline = time.perf_counter() + _MAX_WAIT_SECONDS
+<<<<<<< HEAD
         execution: Dict[str, Any] = {}
+=======
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
 
         while True:
             try:
@@ -248,8 +302,13 @@ class AthenaExecutor(QueryExecutor):
                 )
                 elapsed_ms = (time.perf_counter() - wall_start) * 1000
                 logger.warning(
+<<<<<<< HEAD
                     "AthenaExecutor: query %s — query_id=%s reason=%s",
                     state, query_id, reason,
+=======
+                    "AthenaExecutor: query %s", state,
+                    extra={"query_id": query_id, "reason": reason},
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
                 )
                 return ExecutionResult(
                     execution_time_ms=elapsed_ms,
@@ -312,10 +371,21 @@ class AthenaExecutor(QueryExecutor):
         wall_elapsed_ms = (time.perf_counter() - wall_start) * 1000
 
         logger.info(
+<<<<<<< HEAD
             "AthenaExecutor: complete — query_id=%s rows=%d scanned=%d bytes "
             "athena_ms=%d wall_ms=%.1f cost_usd=%.6f",
             query_id, len(rows), scanned_bytes,
             athena_exec_ms, wall_elapsed_ms, cost_usd,
+=======
+            "AthenaExecutor: query complete",
+            extra={
+                "query_id": query_id,
+                "rows": len(rows),
+                "scanned_bytes": scanned_bytes,
+                "athena_ms": athena_exec_ms,
+                "wall_ms": round(wall_elapsed_ms, 1),
+            },
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
         )
 
         return ExecutionResult(

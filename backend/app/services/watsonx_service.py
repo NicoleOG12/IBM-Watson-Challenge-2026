@@ -128,6 +128,7 @@ def _is_destructive_intent(query: str) -> bool:
 # Each entry is (keyword_list, sql, explanation).
 # The first entry whose keywords all appear (case-insensitive) in the query wins.
 # The final entry acts as the default fallback.
+<<<<<<< HEAD
 # All SQL is written against the real Glue/Athena schema (db_watson):
 #   venda_parquet    (id_venda, id_loja, id_cliente, id_produto, qt_quantidade,
 #                     vl_total_venda, dt_venda, nm_cliente, nm_filial,
@@ -266,6 +267,167 @@ FROM venda_parquet
 GROUP BY nm_filial
 ORDER BY receita_total DESC""",
         "Agrega receita total e número de vendas por filial.",
+=======
+# All SQL is written to run against the SQLite mock schema:
+#   sales(sale_id, region, product_id, amount, quantity, sale_date, channel)
+#   products(product_id, name, category, unit_price, cost_price, is_active)
+#   customers(customer_id, name, email, region, segment, created_at)
+#   orders(order_id, customer_id, order_date, status, total_amount)
+# ---------------------------------------------------------------------------
+
+_MOCK_SCENARIOS: list[tuple[list[str], str, str]] = [
+    # Top customers by revenue
+    (
+        ["top", "customer", "revenue"],
+        """SELECT c.name AS customer_name,
+       c.region,
+       c.segment,
+       SUM(o.total_amount) AS total_revenue
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+GROUP BY c.customer_id, c.name, c.region, c.segment
+ORDER BY total_revenue DESC
+LIMIT 10""",
+        "Returns the top 10 customers ranked by total order revenue.",
+    ),
+    # Average ticket / average order value by channel
+    (
+        ["average", "ticket", "channel"],
+        """SELECT channel,
+       ROUND(AVG(CAST(amount AS REAL)), 2) AS avg_ticket,
+       COUNT(*) AS total_sales
+FROM sales
+GROUP BY channel
+ORDER BY avg_ticket DESC""",
+        "Calculates the average sale amount (ticket) and total number of sales for each channel.",
+    ),
+    # Churn rate / churned customers
+    (
+        ["churn"],
+        """SELECT segment,
+       COUNT(*) AS total_customers,
+       SUM(CASE WHEN churned = 1 THEN 1 ELSE 0 END) AS churned_customers,
+       ROUND(100.0 * SUM(CASE WHEN churned = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) AS churn_rate_pct
+FROM (
+    SELECT c.customer_id,
+           c.segment,
+           CASE WHEN MAX(o.order_date) < DATE(julianday('now') - 90) THEN 1 ELSE 0 END AS churned
+    FROM customers c
+    LEFT JOIN orders o ON c.customer_id = o.customer_id
+    GROUP BY c.customer_id, c.segment
+) sub
+GROUP BY segment
+ORDER BY churn_rate_pct DESC""",
+        "Estimates churn rate per customer segment by flagging customers with no order in the last 90 days.",
+    ),
+    # Critical stock / low stock / inventory
+    (
+        ["stock", "critical"],
+        """SELECT p.name AS product_name,
+       p.category,
+       p.unit_price,
+       COALESCE(SUM(CAST(s.quantity AS INTEGER)), 0) AS units_sold
+FROM products p
+LEFT JOIN sales s ON p.product_id = s.product_id
+WHERE CAST(p.is_active AS TEXT) = 'True'
+GROUP BY p.product_id, p.name, p.category, p.unit_price
+HAVING units_sold > 0
+ORDER BY units_sold DESC
+LIMIT 20""",
+        "Lists active products with their total units sold, highlighting the most-moved inventory.",
+    ),
+    # Delinquency / overdue / pending payments
+    (
+        ["delinquency"],
+        """SELECT status,
+       COUNT(*) AS order_count,
+       ROUND(SUM(CAST(total_amount AS REAL)), 2) AS total_value
+FROM orders
+GROUP BY status
+ORDER BY total_value DESC""",
+        "Breaks down orders by status to surface pending and overdue payment totals.",
+    ),
+    # Sales by product / product performance
+    (
+        ["product", "sales"],
+        """SELECT p.name AS product_name,
+       p.category,
+       COUNT(s.sale_id) AS num_sales,
+       SUM(CAST(s.quantity AS INTEGER)) AS units_sold,
+       ROUND(SUM(CAST(s.amount AS REAL)), 2) AS total_revenue
+FROM sales s
+JOIN products p ON s.product_id = p.product_id
+GROUP BY p.product_id, p.name, p.category
+ORDER BY total_revenue DESC""",
+        "Shows total revenue and units sold per product, joined with product metadata.",
+    ),
+    # Sales drop / Q3 vs Q2 comparison
+    (
+        ["drop", "q3", "q2"],
+        """SELECT p.name AS product_name,
+       ROUND(SUM(CASE WHEN strftime('%m', s.sale_date) IN ('04','05','06') THEN CAST(s.amount AS REAL) ELSE 0 END), 2) AS q2_revenue,
+       ROUND(SUM(CASE WHEN strftime('%m', s.sale_date) IN ('07','08','09') THEN CAST(s.amount AS REAL) ELSE 0 END), 2) AS q3_revenue,
+       ROUND(
+           (SUM(CASE WHEN strftime('%m', s.sale_date) IN ('07','08','09') THEN CAST(s.amount AS REAL) ELSE 0 END) -
+            SUM(CASE WHEN strftime('%m', s.sale_date) IN ('04','05','06') THEN CAST(s.amount AS REAL) ELSE 0 END)) * 100.0 /
+           NULLIF(SUM(CASE WHEN strftime('%m', s.sale_date) IN ('04','05','06') THEN CAST(s.amount AS REAL) ELSE 0 END), 0),
+       1) AS pct_change
+FROM sales s
+JOIN products p ON s.product_id = p.product_id
+WHERE strftime('%Y', s.sale_date) = '2024'
+GROUP BY p.product_id, p.name
+HAVING q2_revenue > 0
+ORDER BY pct_change ASC
+LIMIT 20""",
+        "Compares Q2 vs Q3 2024 revenue per product and calculates the percentage change, ordered by largest drop.",
+    ),
+    # Sales by region
+    (
+        ["sales", "region"],
+        """SELECT region,
+       COUNT(*) AS num_sales,
+       ROUND(SUM(CAST(amount AS REAL)), 2) AS total_sales,
+       ROUND(AVG(CAST(amount AS REAL)), 2) AS avg_sale
+FROM sales
+GROUP BY region
+ORDER BY total_sales DESC""",
+        "Aggregates total and average sales by region.",
+    ),
+    # Orders by status
+    (
+        ["order", "status"],
+        """SELECT status,
+       COUNT(*) AS total_orders,
+       ROUND(SUM(CAST(total_amount AS REAL)), 2) AS total_value,
+       ROUND(AVG(CAST(total_amount AS REAL)), 2) AS avg_order_value
+FROM orders
+GROUP BY status
+ORDER BY total_orders DESC""",
+        "Summarises order counts and values grouped by order status.",
+    ),
+    # Revenue by category
+    (
+        ["category", "revenue"],
+        """SELECT p.category,
+       COUNT(s.sale_id) AS num_sales,
+       ROUND(SUM(CAST(s.amount AS REAL)), 2) AS total_revenue
+FROM sales s
+JOIN products p ON s.product_id = p.product_id
+GROUP BY p.category
+ORDER BY total_revenue DESC""",
+        "Shows total revenue and sale count broken down by product category.",
+    ),
+    # Default fallback — total sales by region
+    (
+        [],
+        """SELECT region,
+       COUNT(*) AS num_sales,
+       ROUND(SUM(CAST(amount AS REAL)), 2) AS total_sales
+FROM sales
+GROUP BY region
+ORDER BY total_sales DESC""",
+        "Aggregates total sales by region.",
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
     ),
 ]
 

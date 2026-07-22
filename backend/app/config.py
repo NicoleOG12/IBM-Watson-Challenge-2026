@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     # Set to True to use in-memory SQLite mock data (no real DB required)
     DB_MOCK: bool = True
 
+<<<<<<< HEAD
     # ── AWS ──────────────────────────────────────────────────────────────────
     AWS_REGION: str = "sa-east-1"
     # Static credentials — used when running outside Lambda (local dev, CI).
@@ -68,6 +69,14 @@ class Settings(BaseSettings):
     # ── Glue ─────────────────────────────────────────────────────────────────
     GLUE_DATABASE: str = "db_watson"
     GLUE_JOB_NAME: str = ""
+=======
+    # AWS Athena
+    # Set USE_ATHENA=True to run queries against real AWS Athena in production
+    USE_ATHENA: bool = False
+    ATHENA_DB: str = "default"
+    ATHENA_OUTPUT: str = ""          # e.g. s3://my-bucket/athena-results/
+    AWS_REGION: str = "us-east-1"
+>>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
 
     # Conversation memory
     # Maximum number of past interactions kept per user in the rolling window
