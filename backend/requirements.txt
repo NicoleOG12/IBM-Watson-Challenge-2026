@@ -1,0 +1,26 @@
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.7.0
+pydantic-settings>=2.2.1
+python-dotenv>=1.0.1
+httpx>=0.27.0
+
+# AWS (required when USE_ATHENA=True or any AWS service is used)
+boto3>=1.34.0
+
+# Future: LLM
+# openai>=1.30.0
+# langchain>=0.2.0
+
+# Future: Database
+# asyncpg>=0.29.0
+# sqlalchemy[asyncio]>=2.0.0
+# alembic>=1.13.0
+
+# Future: Vector store
+# pinecone-client>=3.0.0
+
+# Dev / testing
+# pytest>=8.0.0
+# pytest-asyncio>=0.23.0
+# httpx>=0.27.0

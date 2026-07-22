@@ -1,0 +1,355 @@
+<!-- ============================================================
+     chat.component.html — with ARIA roles and IHC semantics
+     ============================================================ -->
+
+<!-- Skip link for keyboard accessibility -->
+<a class="skip-link" href="#chat-input">Skip to message input</a>
+
+<!-- ── CONVERSATION THREAD ── -->
+<div class="chat-area"
+     role="log"
+     aria-live="polite"
+     aria-label="Conversation with Bob"
+     aria-relevant="additions">
+
+  <!-- ── each message ── -->
+  <article *ngFor="let msg of messages()"
+       class="msg"
+       [class.user]="msg.role === 'user'"
+       [class.bob]="msg.role === 'bob'"
+       [attr.aria-label]="msg.role === 'bob' ? 'Bob replied' : 'You asked'">
+
+    <div class="msg-avatar"
+         [class.bob]="msg.role === 'bob'"
+         [class.user]="msg.role === 'user'"
+         aria-hidden="true">
+      <img *ngIf="msg.role === 'bob'" src="assets/bob-avatar.png" alt="" class="bob-avatar-img"/>
+      <span *ngIf="msg.role !== 'bob'">AR</span>
+    </div>
+
+    <div class="msg-body">
+
+      <!-- ── pipeline steps (step flow) ── -->
+      <div class="step-flow" *ngIf="msg.steps" role="list" aria-label="Processing steps">
+        <ng-container *ngFor="let s of msg.steps; let last = last">
+          <div class="step-pill"
+               role="listitem"
+               [class.done]="s.status === 'done'"
+               [class.active]="s.status === 'active'"
+               [class.warn]="s.status === 'warn'"
+               [class.error]="s.status === 'error'"
+               [title]="s.endpoint ?? ''"
+               [attr.aria-label]="s.label + ': ' + s.status">
+            <span aria-hidden="true" *ngIf="s.status === 'done'">✓</span>
+            <span aria-hidden="true" *ngIf="s.status === 'warn'">⚠</span>
+            <span aria-hidden="true" *ngIf="s.status === 'active'">●</span>
+            {{ s.label }}
+          </div>
+          <span class="step-arrow" aria-hidden="true" *ngIf="!last">›</span>
+        </ng-container>
+      </div>
+
+      <!-- ── SQL Preview Card ── -->
+      <div class="card sql-card" *ngIf="msg.sqlPreview as p" role="region" aria-label="Generated SQL preview">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="tag tag-dark" aria-hidden="true">SQL Preview</span>
+            Automatically generated SQL
+          </div>
+          <span class="table-ref" [title]="p.table" aria-label="Table: {{ p.table }}">{{ p.table }}</span>
+        </div>
+        <div class="card-body">
+
+          <!-- SQL block — read mode or edit mode -->
+          <ng-container *ngIf="editingSqlMsgId !== msg.id; else sqlEditor">
+            <pre class="sql-block" role="region" aria-label="Generated SQL code"><code>{{ p.sql }}</code></pre>
+          </ng-container>
+          <ng-template #sqlEditor>
+            <textarea
+              class="sql-editor"
+              rows="10"
+              [(ngModel)]="editedSqlDraft"
+              aria-label="SQL editor — edit the query manually"
+              spellcheck="false">
+            </textarea>
+          </ng-template>
+
+          <!-- validation / write block -->
+          <div class="sql-safe" *ngIf="p.validation.safe" role="status" aria-live="polite">
+            <span aria-hidden="true">✓</span> No destructive operations detected (no DELETE / DROP / TRUNCATE)
+          </div>
+          <div class="sql-readonly-block" *ngIf="!p.validation.safe" role="alert" aria-live="assertive">
+            <span class="readonly-icon" aria-hidden="true">🔒</span>
+            <div class="readonly-text">
+              <strong>Read-only queries are allowed only.</strong>
+              <span>This query contains disallowed operations: {{ p.validation.warnings.join(', ') }}</span>
+            </div>
+          </div>
+
+          <!-- explanation of what was done (no chain-of-thought) -->
+          <div class="sql-explanation" *ngIf="p.explanation" role="note" aria-label="Explanation of the generated query">
+            <span class="explanation-label" aria-hidden="true">What was done</span>
+            <p class="explanation-text">{{ p.explanation }}</p>
+          </div>
+
+          <!-- cost estimate -->
+          <div class="cost-row" role="list" aria-label="Query cost estimate">
+            <div class="cost-chip warn" role="listitem">
+              Bytes scanned: <strong>{{ p.cost.bytesScanned }}</strong>
+            </div>
+            <div class="cost-chip warn" role="listitem">
+              Estimated cost: <strong>{{ p.cost.estimatedCost }}</strong>
+            </div>
+            <div class="cost-chip" role="listitem">
+              Table: <strong>{{ p.cost.table }}</strong>
+            </div>
+            <div class="cost-chip" role="listitem">
+              Engine: <strong>{{ p.cost.engine }}</strong>
+            </div>
+          </div>
+
+          <!-- actions -->
+          <div class="action-row" style="margin-top:10px;" role="group" aria-label="Query actions">
+            <button class="btn btn-primary" type="button"
+                    (click)="executeQuery()"
+                    [disabled]="flowState() === 'executing' || !p.validation.safe"
+                    [attr.aria-busy]="flowState() === 'executing'"
+                    aria-describedby="sql-exec-hint">
+              {{ flowState() === 'executing' ? '⏳ Executing...' : '▶ Run query' }}
+            </button>
+            <span id="sql-exec-hint" class="sr-only">Runs the SQL query against the selected database</span>
+
+            <!-- Edit SQL: toggles between opening the editor and confirming -->
+            <ng-container *ngIf="editingSqlMsgId !== msg.id; else confirmEditBtn">
+              <button class="btn btn-secondary" type="button"
+                      (click)="toggleEditSql(msg.id, p.sql)"
+                      aria-label="Edit the SQL manually">
+                ✎ Edit SQL
+              </button>
+            </ng-container>
+            <ng-template #confirmEditBtn>
+              <button class="btn btn-primary" type="button"
+                      (click)="confirmEditSql(msg.id)"
+                      aria-label="Confirm SQL edit">
+                ✔ Confirm SQL
+              </button>
+              <button class="btn btn-secondary" type="button"
+                      (click)="toggleEditSql(msg.id, p.sql)"
+                      aria-label="Cancel SQL edit">
+                ✕ Discard
+              </button>
+            </ng-template>
+
+            <button class="btn btn-danger" type="button" (click)="cancelQuery()" aria-label="Cancel the ongoing query">
+              ✕ Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Results Table ── -->
+      <div class="card result-card" *ngIf="msg.results as r" role="region" [attr.aria-label]="'Results: ' + r.rowCount + ' rows in ' + r.durationMs + 'ms'">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="tag tag-green" aria-hidden="true">Results</span>
+            <span aria-live="polite">{{ r.rowCount }} rows returned in {{ r.durationMs }}ms</span>
+          </div>
+          <button class="csv-link" type="button" aria-label="Export results as CSV">
+            <span aria-hidden="true">↓</span> CSV
+          </button>
+        </div>
+        <div class="card-body">
+          <table class="result-table" role="grid" [attr.aria-label]="'Results table with ' + r.columns.length + ' columns'">
+            <thead>
+              <tr>
+                <th scope="col" *ngFor="let col of r.columns">{{ col }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of r.rows; let i = index" [class.alt]="i % 2 === 1">
+                <td *ngFor="let col of r.columns"
+                    [class.negative]="isNegative(row[col])">
+                  {{ formatCell(row[col], col) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="has-more" *ngIf="r.hasMore" role="note">
+            + more rows… <button class="link" type="button">see all</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Insights + Output Selector ── -->
+      <ng-container *ngIf="msg.insights">
+        <div class="card insight-card" role="region" aria-label="Insights generated by Bob">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="tag tag-purple" aria-hidden="true">Insights</span>
+              Analysis generated by Bob
+            </div>
+          </div>
+          <div class="card-body insight-list" role="list">
+            <div *ngFor="let ins of msg.insights"
+                 role="listitem"
+                 class="insight-item"
+                 [class.positive]="ins.type === 'positive'"
+                 [class.warning]="ins.type === 'warning'"
+                 [class.info]="ins.type === 'info'">
+              <span class="ins-icon" aria-hidden="true">{{ ins.icon }}</span>
+              <span [innerHTML]="ins.text"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Selector -->
+        <div class="card output-card" *ngIf="msg.showOutputSelector" role="region" aria-label="Output format selector">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="tag tag-dark" aria-hidden="true">Output</span>
+              How would you like to receive this analysis?
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="output-grid" role="group" aria-label="Available output formats">
+              <button class="out-tile" type="button"
+                      (click)="generateOutput('executive_summary')"
+                      aria-label="Generate Executive Summary PDF for leadership">
+                <div class="out-icon" aria-hidden="true">📄</div>
+                <div class="out-label">Executive Summary</div>
+                <div class="out-desc">PDF for leadership</div>
+              </button>
+              <button class="out-tile" type="button"
+                      (click)="generateOutput('dashboard')"
+                      aria-label="Generate Dashboard with interactive charts">
+                <div class="out-icon" aria-hidden="true">📊</div>
+                <div class="out-label">Dashboard</div>
+                <div class="out-desc">Interactive charts</div>
+              </button>
+              <button class="out-tile" type="button"
+                      (click)="generateOutput('logbook')"
+                      aria-label="Generate Logbook with full traceability">
+                <div class="out-icon" aria-hidden="true">📓</div>
+                <div class="out-label">Logbook</div>
+                <div class="out-desc">Full traceability</div>
+              </button>
+            </div>
+
+            <!-- External actions -->
+            <div class="actions-footer">
+              <div class="actions-label" aria-hidden="true">Available actions:</div>
+              <div class="action-row" role="group" aria-label="External actions">
+                <button class="btn btn-ghost" type="button" (click)="triggerAction('jira_ticket')">+ Create Jira ticket</button>
+                <button class="btn btn-ghost" type="button" (click)="triggerAction('send_email')">✉ Send by email</button>
+                <button class="btn btn-ghost" type="button" (click)="saveQuestion()">★ Save question</button>
+                <button class="btn btn-integrate" type="button"
+                        (click)="integrateWithClientDb()"
+                        aria-label="Integrate results with the client database">
+                  ⛁ Integrate with client DB
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ── Next Steps ── -->
+      <div class="card next-card" *ngIf="msg.nextSteps" role="region" aria-label="Suggested next steps">
+        <div class="card-body">
+          <div class="next-title" id="next-steps-title">Suggested next steps:</div>
+          <div class="next-steps" role="list" aria-labelledby="next-steps-title">
+            <button *ngFor="let s of msg.nextSteps"
+                    role="listitem"
+                    type="button"
+                    class="next-step-btn"
+                    (click)="sendNextStep(s)"
+                    [attr.aria-label]="'Suggest: ' + s">
+              › {{ s }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Plain text ── -->
+      <div class="msg-bubble"
+           *ngIf="msg.text"
+           [innerHTML]="msg.text">
+      </div>
+
+      <div class="msg-time" aria-label="Sent at {{ msg.time }}">{{ msg.time }}</div>
+    </div>
+  </article>
+
+  <!-- "Bob is thinking" indicator -->
+  <div class="msg bob"
+       *ngIf="flowState() === 'thinking'"
+       role="status"
+       aria-live="polite"
+       aria-label="Bob is processing your question">
+    <div class="msg-avatar bob" aria-hidden="true">
+      <img src="assets/bob-avatar.png" alt="" class="bob-avatar-img"/>
+    </div>
+    <div class="msg-body">
+      <div class="msg-bubble thinking" aria-hidden="true">
+        <span class="dot-1">●</span>
+        <span class="dot-2">●</span>
+        <span class="dot-3">●</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- auto-scroll anchor -->
+  <div #chatEnd aria-hidden="true"></div>
+</div>
+
+<!-- ── Quick Question Chips ── -->
+<div class="quick-chips" role="group" aria-label="Suggested questions">
+  <button *ngFor="let chip of chips"
+          type="button"
+          class="chip"
+          [disabled]="flowState() !== 'idle'"
+          [attr.aria-disabled]="flowState() !== 'idle'"
+          (click)="sendMessage(chip)"
+          [attr.aria-label]="'Ask: ' + chip">
+    {{ chip }}
+  </button>
+</div>
+
+<!-- ── Input Bar ── -->
+<div class="input-bar" role="region" aria-label="Message input">
+  <div class="input-wrap">
+    <div class="input-field-wrap">
+      <label for="chat-input" class="sr-only">Ask a question about your data</label>
+      <textarea
+        id="chat-input"
+        class="input-field"
+        rows="1"
+        placeholder="Ask a question about your data... (e.g. Which customers are at churn risk?)"
+        [(ngModel)]="inputText"
+        (keydown.enter)="$event.preventDefault(); sendMessage()"
+        [disabled]="flowState() !== 'idle'"
+        [attr.aria-disabled]="flowState() !== 'idle'"
+        aria-multiline="true"
+        aria-describedby="input-hint">
+      </textarea>
+      <span id="input-hint" class="sr-only">Press Enter to send or use the Send message button</span>
+      <div class="input-toolbar" role="toolbar" aria-label="Input tools">
+        <button class="tool-btn" type="button" aria-label="Select table from catalog">⊞ Table</button>
+        <button class="tool-btn" type="button" aria-label="Use a saved question">★ Saved question</button>
+        <button class="tool-btn" type="button" aria-label="Preview SQL without executing">⬚ Preview only</button>
+        <button class="tool-btn" type="button" aria-label="Select database: AWS" aria-haspopup="listbox">⛁ AWS ▾</button>
+      </div>
+    </div>
+
+    <button class="send-btn"
+            type="button"
+            (click)="sendMessage()"
+            [disabled]="!inputText.trim() || flowState() !== 'idle'"
+            [attr.aria-disabled]="!inputText.trim() || flowState() !== 'idle'"
+            aria-label="Send message">
+      <svg viewBox="0 0 16 16" fill="white" width="16" height="16" aria-hidden="true">
+        <path d="M2 2l12 6-12 6V9.5l8-1.5-8-1.5z"/>
+      </svg>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,78 @@
+{
+  "tables": [
+    {
+      "table_name": "cliente_parquet",
+      "description": "Cadastro completo de clientes com dados pessoais e de contato.",
+      "columns": [
+        { "name": "id_identificador", "type": "STRING",    "description": "Identificador único do cliente" },
+        { "name": "nm_nome",          "type": "STRING",    "description": "Primeiro nome do cliente" },
+        { "name": "ds_sobrenome",     "type": "STRING",    "description": "Sobrenome do cliente" },
+        { "name": "nu_cpf",           "type": "STRING",    "description": "CPF do cliente (formatado)" },
+        { "name": "dt_nascimento",    "type": "STRING",    "description": "Data de nascimento do cliente (YYYY-MM-DD)" },
+        { "name": "ct_cidade",        "type": "STRING",    "description": "Cidade de residência do cliente" },
+        { "name": "sg_estado",        "type": "STRING",    "description": "Sigla do estado de residência (ex: SP, RJ)" },
+        { "name": "ds_endereco",      "type": "STRING",    "description": "Nome da rua/avenida do endereço do cliente" },
+        { "name": "nu_endereco",      "type": "BIGINT",    "description": "Número do endereço do cliente" },
+        { "name": "ds_complemento",   "type": "STRING",    "description": "Complemento do endereço (apto, bloco, etc.)" },
+        { "name": "nu_cep",           "type": "STRING",    "description": "CEP do endereço do cliente" },
+        { "name": "ds_email",         "type": "STRING",    "description": "Endereço de e-mail do cliente" },
+        { "name": "nu_telefone",      "type": "STRING",    "description": "Número de telefone de contato do cliente" }
+      ]
+    },
+    {
+      "table_name": "loja_parquet",
+      "description": "Cadastro das filiais/lojas com localização e status de operação.",
+      "columns": [
+        { "name": "id_identificador", "type": "STRING",    "description": "Identificador único da loja/filial" },
+        { "name": "nm_filial",        "type": "STRING",    "description": "Nome da filial" },
+        { "name": "nu_cnpj",          "type": "STRING",    "description": "CNPJ da loja" },
+        { "name": "ct_cidade",        "type": "STRING",    "description": "Cidade onde a loja está localizada" },
+        { "name": "sg_estado",        "type": "STRING",    "description": "Sigla do estado da loja (ex: SP, MG)" },
+        { "name": "ds_endereco",      "type": "STRING",    "description": "Logradouro do endereço da loja" },
+        { "name": "nu_endereco",      "type": "BIGINT",    "description": "Número do endereço da loja" },
+        { "name": "ds_complemento",   "type": "STRING",    "description": "Complemento do endereço da loja" },
+        { "name": "fl_status",        "type": "BOOLEAN",   "description": "Indica se a loja está ativa (true) ou inativa (false)" }
+      ]
+    },
+    {
+      "table_name": "produtos_parquet",
+      "description": "Catálogo de produtos com preço, categoria e estoque disponível.",
+      "columns": [
+        { "name": "id_identificador",  "type": "STRING",  "description": "Identificador único do produto" },
+        { "name": "nm_nome",           "type": "STRING",  "description": "Nome do produto" },
+        { "name": "ds_descricao",      "type": "STRING",  "description": "Descrição detalhada do produto" },
+        { "name": "nm_categoria",      "type": "STRING",  "description": "Categoria do produto (ex: Eletrônicos, Vestuário)" },
+        { "name": "vl_preco_unitario", "type": "DOUBLE",  "description": "Preço unitário de venda do produto em R$" },
+        { "name": "qt_estoque",        "type": "BIGINT",  "description": "Quantidade disponível em estoque" }
+      ]
+    },
+    {
+      "table_name": "venda_parquet",
+      "description": "Registros de vendas realizadas, com dados desnormalizados de cliente, loja e produto para facilitar análises.",
+      "columns": [
+        { "name": "id_venda",          "type": "STRING",  "description": "Identificador único da venda" },
+        { "name": "id_loja",           "type": "STRING",  "description": "Chave estrangeira da loja onde a venda ocorreu" },
+        { "name": "id_cliente",        "type": "STRING",  "description": "Chave estrangeira do cliente que realizou a compra" },
+        { "name": "id_produto",        "type": "STRING",  "description": "Chave estrangeira do produto vendido" },
+        { "name": "qt_quantidade",     "type": "BIGINT",  "description": "Quantidade de unidades vendidas" },
+        { "name": "vl_total_venda",    "type": "DOUBLE",  "description": "Valor total da venda em R$" },
+        { "name": "dt_venda",          "type": "STRING",  "description": "Data em que a venda foi realizada (YYYY-MM-DD)" },
+        { "name": "nm_cliente",        "type": "STRING",  "description": "Nome completo do cliente (desnormalizado)" },
+        { "name": "nm_filial",         "type": "STRING",  "description": "Nome da filial onde ocorreu a venda (desnormalizado)" },
+        { "name": "nm_produto",        "type": "STRING",  "description": "Nome do produto vendido (desnormalizado)" },
+        { "name": "nm_categoria",      "type": "STRING",  "description": "Categoria do produto vendido (desnormalizado)" },
+        { "name": "vl_preco_unitario", "type": "DOUBLE",  "description": "Preço unitário do produto no momento da venda em R$" }
+      ]
+    },
+    {
+      "table_name": "dataset_completo_parquet",
+      "description": "Visão consolidada com arrays de lojas, produtos, clientes e vendas em uma única linha — use preferencialmente as tabelas individuais para análises relacionais.",
+      "columns": [
+        { "name": "lojas",    "type": "ARRAY<STRUCT>", "description": "Array de objetos de loja (ID, Filial, CNPJ, Cidade, Estado, Endereco, Numero, Complemento, Status)" },
+        { "name": "produtos", "type": "ARRAY<STRUCT>", "description": "Array de objetos de produto (ID, Nome, Descricao, Categoria, Preco_Unitario, Estoque)" },
+        { "name": "clientes", "type": "ARRAY<STRUCT>", "description": "Array de objetos de cliente (ID, Nome, Sobrenome, CPF, Data_Nascimento, Cidade, Estado, Endereco, Numero, Complemento, CEP, Email, Telefone)" },
+        { "name": "vendas",   "type": "ARRAY<STRUCT>", "description": "Array de objetos de venda (ID_Venda, ID_Loja, ID_Cliente, ID_Produto, Qtd, Valor_Total, Data_Venda, Nome_Cliente, Filial, Produto, Categoria, Preco_Unitario)" }
+      ]
+    }
+  ]
+}
