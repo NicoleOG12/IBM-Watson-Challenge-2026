@@ -8,10 +8,7 @@ Add new feature routers below as the project grows.
 from fastapi import APIRouter
 
 from app.controllers.audit_controller import router as audit_router
-<<<<<<< HEAD
 from app.controllers.aws_controller import router as aws_router
-=======
->>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
 from app.controllers.copilot_controller import router as copilot_router
 from app.controllers.cost_controller import router as cost_router
 from app.controllers.docs_controller import router as docs_router
@@ -30,7 +27,4 @@ api_router.include_router(sql_router)
 api_router.include_router(saved_queries_router)
 api_router.include_router(docs_router)
 api_router.include_router(copilot_router)
-<<<<<<< HEAD
 api_router.include_router(aws_router)
-=======
->>>>>>> a749ebc84c4475b1a91e44c8818945562ebe6f32
