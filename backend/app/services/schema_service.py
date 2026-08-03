@@ -24,8 +24,9 @@ from app.models.schema import SchemaContext, TableMeta
 
 logger = logging.getLogger(__name__)
 
-# Default path — relative to the project root (where uvicorn is launched from)
-_DEFAULT_SCHEMA_PATH = Path("data/schema.json")
+# Default path — resolved relative to this file so it works regardless of CWD
+# (important for Vercel / Lambda where the working directory varies)
+_DEFAULT_SCHEMA_PATH = Path(__file__).parent.parent.parent / "data" / "schema.json"
 
 
 # ---------------------------------------------------------------------------

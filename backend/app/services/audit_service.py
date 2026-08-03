@@ -52,8 +52,14 @@ def _write_log(entry: AuditLog) -> None:
     if not settings.AUDIT_ENABLED:
         return
 
+    # Resolve the log path: prefer the configured value, but fall back to
+    # /tmp/<filename> when the configured directory is not writable (e.g. Vercel).
     log_path = Path(settings.AUDIT_LOG_FILE)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        # Filesystem is read-only (Vercel / Lambda) — redirect to /tmp
+        log_path = Path("/tmp") / log_path.name
 
     try:
         with open(log_path, "a", encoding="utf-8") as fh:
