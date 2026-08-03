@@ -768,7 +768,7 @@ export class RightPanelComponent implements OnInit {
   setTab(tab: PanelTab): void {
     this.activeTab = tab;
     if (tab === 'history' && this.history.length === 0) {
-      this.querySvc.getHistory('alex.rodrigues@acme.com').subscribe(h => this.history = h);
+      this.querySvc.getHistory('nicole.goncalves@acme.com').subscribe(h => this.history = h);
     }
     if (tab === 'audit' && this.auditLog.length === 0) {
       this.auditSvc.getSession('sess_9f3a').subscribe(a => this.auditLog = a);

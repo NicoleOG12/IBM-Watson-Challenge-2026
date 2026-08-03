@@ -44,7 +44,7 @@ import { CommonModule } from '@angular/common';
           sess_9f3a
         </span>
         <span class="sb-vsep" aria-hidden="true"></span>
-        <span class="info-user" aria-label="User: alex.rodrigues@acme.com">alex.rodrigues&#64;acme.com</span>
+        <span class="info-user" aria-label="User: nicole.goncalves@acme.com">nicole.goncalves&#64;acme.com</span>
       </div>
     </div>
   `,

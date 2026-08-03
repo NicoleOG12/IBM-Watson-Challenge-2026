@@ -18,7 +18,7 @@ const API = '/api';
 // ─────────────────────────────────────────────────────────────
 
 // Hard-coded user for demo — replace with real auth session
-const DEMO_USER = 'alex.rodrigues@acme.com';
+const DEMO_USER = 'nicole.goncalves@acme.com';
 
 @Injectable({ providedIn: 'root' })
 export class CopilotService {

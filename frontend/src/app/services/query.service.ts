@@ -14,7 +14,7 @@ import { CopilotStateService } from './copilot-state.service';
 // ─────────────────────────────────────────────────────────────
 
 const API = '/api';
-const DEMO_USER = 'alex.rodrigues@acme.com';
+const DEMO_USER = 'nicole.goncalves@acme.com';
 
 @Injectable({ providedIn: 'root' })
 export class QueryService {

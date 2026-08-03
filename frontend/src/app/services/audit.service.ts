@@ -11,7 +11,7 @@ import { AuditEntry } from '../models/copilot.models';
 // ─────────────────────────────────────────────────────────────
 
 const API = '/api';
-const DEMO_USER = 'alex.rodrigues@acme.com';
+const DEMO_USER = 'nicole.goncalves@acme.com';
 
 interface BackendAuditLog {
   log_id:                 string;

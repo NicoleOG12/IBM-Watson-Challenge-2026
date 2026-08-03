@@ -15,7 +15,7 @@ from app.models.insight import InsightReport
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Copilot"])
 
-_DEMO_USER = "alex.rodrigues@acme.com"
+_DEMO_USER = "nicole.goncalves@acme.com"
 
 
 class NextStepsResponse:

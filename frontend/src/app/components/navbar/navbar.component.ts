@@ -120,11 +120,11 @@ import { ThemeService } from '../../services/theme.service';
                 aria-label="User menu: Alex Rodrigues, Senior Analyst"
                 aria-haspopup="true">
           <div class="user-avatar" aria-hidden="true">
-            <span>AR</span>
+            <span>NG</span>
             <div class="avatar-ring"></div>
           </div>
           <div class="user-info">
-            <div class="user-name">Alex Rodrigues</div>
+            <div class="user-name">Nicole Goncalves</div>
             <div class="user-role">Senior Analyst</div>
           </div>
         </button>

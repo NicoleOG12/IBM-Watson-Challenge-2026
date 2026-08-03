@@ -13,7 +13,7 @@ import { SavedQuestion } from '../models/copilot.models';
 // ─────────────────────────────────────────────────────────────
 
 const API = '/api';
-const DEMO_USER = 'alex.rodrigues@acme.com';
+const DEMO_USER = 'nicole.goncalves@acme.com';
 
 // Backend SavedQuery shape → frontend SavedQuestion shape
 interface BackendSavedQuery {
