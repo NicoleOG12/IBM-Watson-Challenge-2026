@@ -1,41 +1,27 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "backend/api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
+  "services": {
+    "frontend": {
+      "root": "frontend",
+      "framework": "angular"
     },
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/watsonx/browser"
-      }
+    "backend": {
+      "root": "backend"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend/api/index.py"
+      "source": "/api(/.*)?",
+      "destination": {
+        "type": "service",
+        "service": "backend"
+      }
     },
     {
-      "src": "/docs",
-      "dest": "backend/api/index.py"
-    },
-    {
-      "src": "/redoc",
-      "dest": "backend/api/index.py"
-    },
-    {
-      "src": "/openapi.json",
-      "dest": "backend/api/index.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "frontend/dist/watsonx/browser/$1"
+      "source": "/(.*)",
+      "destination": {
+        "type": "service",
+        "service": "frontend"
+      }
     }
   ]
 }
